@@ -4,6 +4,8 @@ output: html_document
 date: "2026-04-06"
 ---
 
+## Data Cleaning
+
 ```{R}
 # Libraries
 library(here)
@@ -81,4 +83,20 @@ full_data = base_clean |>
   left_join(vis_clean, by = "id") |>
   left_join(outcome_clean, by = "id")
 
+full_data = full_data |>
+  mutate(
+    avg_sbp = rowMeans(cbind(sbp2, sbp3), na.rm = TRUE),
+    avg_dbp = rowMeans(cbind(dbp2, dbp3), na.rm = TRUE)
+  )
+summary(full_data)
+
+write_csv(full_data, "files/full_data.csv")
 ```
+
+```{R}
+head(full_data, 20)
+```
+
+## Incident Hypertension
+
+```{R}
