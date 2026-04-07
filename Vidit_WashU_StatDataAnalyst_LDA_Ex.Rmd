@@ -8,6 +8,7 @@ date: "2026-04-06"
 # Libraries
 library(here)
 library(tidyverse)
+library(janitor)
 ```
 
 ```{R}
@@ -21,6 +22,57 @@ outcome = read_csv(here("files", "outcomes_df.csv"))
 
 # Summary check for all datasets
 summary(base)
+print("---")
 summary(vis)
+print("---")
 summary(outcome)
+
+# View all of them
+view(base)
+view(vis)
+view(outcome)
+```
+
+```{R}
+# Data Cleaning, Manipulation and Merging
+# Ignoring NAs or missingnes for now
+# First cleaning base
+base = base |>
+  mutate(sex = as.factor(sex))
+summary(base$sex)
+# So, sex = 1, M, male, Male means males and otherwise female
+base_clean = base |>
+  mutate(male = factor(
+  ifelse(sex %in% c(1, "M", "male", "Male"), 1, 0),
+  levels = c(0, 1),
+  labels = c("Female", "Male")
+)) |>
+  dplyr::select(-sex) |>
+  mutate(entry_date = as.Date(entry_date, format = "%d-%b-%Y")) |>
+  mutate(id = as.character(id))
+summary(base_clean)
+
+# Now cleaning vis
+vis = vis |>
+  mutate(visit_type = as.factor(visit_type))
+summary(vis$visit_type)
+
+vis_clean = vis |>
+  mutate(
+    visit_type = factor(tolower(as.character(visit_type))),
+    id = as.character(id),
+    visit_date = as.Date(visit_date, format = "%d/%m/%Y")
+  )
+summary(vis_clean)
+
+# Now cleaning outcome 
+outcome = outcome |>
+  mutate(exit_type = as.factor(exit_type))
+summary(outcome$exit_type)
+
+outcome_clean = outcome |>
+  mutate(id = as.character(id),
+    exit_date = as.Date(exit_date, format = "%d/%m/%Y"))
+
+summary(outcome_clean)
 ```
