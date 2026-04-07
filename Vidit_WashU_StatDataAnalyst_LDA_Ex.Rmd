@@ -4,3 +4,23 @@ output: html_document
 date: "2026-04-06"
 ---
 
+```{R}
+# Libraries
+library(here)
+library(tidyverse)
+```
+
+```{R}
+# Reading the datasets
+# Baseline Data
+base = read_csv(here("files", "baseline_df.csv"))
+# Visits Data
+vis = read_csv(here("files", "visits_df.csv"))
+# Exits and Death Data
+outcome = read_csv(here("files", "outcomes_df.csv"))
+
+# Summary check for all datasets
+summary(base)
+summary(vis)
+summary(outcome)
+```
