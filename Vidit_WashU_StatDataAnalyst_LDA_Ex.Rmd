@@ -75,4 +75,10 @@ outcome_clean = outcome |>
     exit_date = as.Date(exit_date, format = "%d/%m/%Y"))
 
 summary(outcome_clean)
+
+# Joining the data!
+full_data = base_clean |>
+  left_join(vis_clean, by = "id") |>
+  left_join(outcome_clean, by = "id")
+
 ```
