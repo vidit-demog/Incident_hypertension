@@ -11,6 +11,7 @@ date: "2026-04-06"
 library(here)
 library(tidyverse)
 library(janitor)
+library(kableExtra)
 ```
 
 ```{R}
@@ -46,8 +47,7 @@ summary(base$sex)
 base_clean = base |>
   mutate(male = factor(
   ifelse(sex %in% c(1, "M", "male", "Male"), 1, 0),
-  levels = c(0, 1),
-  labels = c("Female", "Male")
+  levels = c(0, 1)
 )) |>
   dplyr::select(-sex) |>
   mutate(entry_date = as.Date(entry_date, format = "%d-%b-%Y")) |>
@@ -93,6 +93,18 @@ full_data = full_data |>
     avg_sbp = rowMeans(cbind(sbp2, sbp3), na.rm = TRUE),
     avg_dbp = rowMeans(cbind(dbp2, dbp3), na.rm = TRUE)
   )
+
+full_data = full_data |>
+  mutate(
+    a_med = as.factor(as.integer(
+      if_any(
+        c(amlodipine, bisoprolol, captopril, carvedilol,
+          enalapril, furosemide, hctz, lisinopril,
+          losaratan, metoprolol),
+        ~ . == 1
+      )
+    ))
+  )
 summary(full_data)
 
 write_csv(full_data, "files/full_data.csv")
@@ -105,3 +117,68 @@ head(full_data, 20)
 ## Incident Hypertension
 
 ```{R}
+make_table_kable = function(df, event_var) {
+  
+  # Prepare empty list to store rows
+  table_rows = list()
+  
+  # Total row
+  n = nrow(df)
+  e = sum(df[[event_var]], na.rm = TRUE)
+  py = sum(df$py, na.rm = TRUE)
+  inc = ifelse(py > 0, (e / py) * 1000, NA)
+  table_rows[[1]] = data.frame(
+    Category = "Total",
+    `Disease Free (n)` = n,
+    `Events (n)` = e,
+    `Person-Years` = round(py,2),
+    `Incidence per 1000 PYs` = round(inc,2)
+  )
+  
+  # Sex rows
+  for (sex in c(1,0)) {
+    sub = df[df$male == sex, ]
+    py_sub = sum(sub$py, na.rm = TRUE)
+    inc_sub = ifelse(py_sub > 0, (sum(sub[[event_var]], na.rm = TRUE) / py_sub) * 1000, NA)
+    table_rows[[length(table_rows)+1]] = data.frame(
+      Category = ifelse(sex==1,"Male","Female"),
+      `Disease Free (n)` = nrow(sub),
+      `Events (n)` = sum(sub[[event_var]], na.rm = TRUE),
+      `Person-Years` = round(py_sub,2),
+      `Incidence per 1000 PYs` = round(inc_sub,2)
+    )
+  }
+  
+  # Age group rows
+  groups = c("18-29 years","30-39 years","40-49 years","50-59 years","60+ years")
+  for (g in groups) {
+    sub = df[df$age_group == g, ]
+    if (nrow(sub) > 0) {
+      py_sub = sum(sub$py, na.rm = TRUE)
+      inc_sub = ifelse(py_sub > 0, (sum(sub[[event_var]], na.rm = TRUE) / py_sub) * 1000, NA)
+      table_rows[[length(table_rows)+1]] = data.frame(
+        Category = g,
+        `Disease Free (n)` = nrow(sub),
+        `Events (n)` = sum(sub[[event_var]], na.rm = TRUE),
+        `Person-Years` = round(py_sub,2),
+        `Incidence per 1000 PYs` = round(inc_sub,2)
+      )
+    }
+  }
+  
+  # Bind all rows
+  out_table = do.call(rbind, table_rows)
+  
+  # Print kableExtra table
+  out_table %>%
+    kbl(caption = paste0("Incident Hypertension - ", event_var),
+        align = "lrrrr") %>%
+    kable_styling(full_width = FALSE, position = "left", bootstrap_options = c("striped","hover"))
+}
+
+# Part A table
+make_table_kable(person_df, "event_A")
+
+# Part B table
+make_table_kable(person_df, "event_B")
+```
