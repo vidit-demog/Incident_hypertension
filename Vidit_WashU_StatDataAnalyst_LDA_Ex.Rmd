@@ -117,7 +117,13 @@ head(full_data, 20)
 ## Incident Hypertension
 
 ```{R}
-# Copy data so original is not changed
+# Helper function to prevent "no non-missing arguments" warnings
+safe_min <- function(x) {
+  if (length(x) == 0 || all(is.na(x))) return(as.Date(NA))
+  min(x, na.rm = TRUE)
+}
+
+# 1. Initial cleaning and baseline filtering
 table_data = full_data |>
   arrange(id, visit_date) |>
   mutate(
@@ -126,82 +132,48 @@ table_data = full_data |>
                  as.integer(avg_sbp >= 130 | avg_dbp >= 80),
                  NA_integer_),
     htn_or_meds = as.integer(htn == 1 | meds == 1)
-  )
-
-# Keep ids with entry visit
-baseline = table_data |>
-  filter(tolower(visit_type) == "entry")
-
-ids = unique(baseline$id)
-
-table_data = table_data |>
-  filter(id %in% ids) |>
+  ) |>
   group_by(id) |>
-  arrange(visit_date) |>
   mutate(visit_number = row_number()) |>
   ungroup()
 
-# Baseline row
-baseline = table_data |>
-  filter(visit_number == 1)
+# Keep only those who were disease-free at visit 1
+baseline_df_ids = table_data |>
+  filter(visit_number == 1, htn == 0, meds == 0) |>
+  pull(id)
 
-# Disease free at baseline (only htn=0 & meds=0)
-baseline_df = baseline |>
-  filter(htn == 0 & meds == 0)
-
-# Keep only disease free
 table_data = table_data |>
-  filter(id %in% baseline_df$id)
+  filter(id %in% baseline_df_ids)
 
-# Event part A: first occurrence of htn or meds after baseline
-table_data = table_data |>
-  group_by(id) |>
-  mutate(
-    first_event_date = min(visit_date[visit_number > 1 & htn_or_meds == 1], na.rm = TRUE),
-    event_A = as.integer(!is.infinite(first_event_date))
-  ) |>
-  ungroup()
-
-# Event part B: second occurrence of htn or meds after baseline
-table_data = table_data |>
-  group_by(id) |>
-  mutate(
-    cum_htn = cumsum(visit_number > 1 & htn_or_meds == 1),
-    second_event_date = min(visit_date[cum_htn >= 2], na.rm = TRUE),
-    event_B = as.integer(!is.infinite(second_event_date))
-  ) |>
-  ungroup() |>
-  select(-cum_htn)
-
-# First and second event dates and last visit per person
+# 2. Calculate dates and Person-Years 
 event_dates = table_data |>
+  arrange(id, visit_date) |>
   group_by(id) |>
   summarise(
     entry_date = min(visit_date),
     last_date = max(visit_date),
-    first_event_date = min(visit_date[visit_number > 1 & htn_or_meds == 1], na.rm = TRUE),
-    second_event_date = min(visit_date[visit_number > 1 & cumsum(htn_or_meds == 1) >= 2], na.rm = TRUE)
+    # Using safe_min to avoid warnings
+    first_event_date = safe_min(visit_date[visit_number > 1 & htn_or_meds == 1]),
+    second_event_date = safe_min(visit_date[visit_number > 1 & cumsum(htn_or_meds == 1) >= 2])
   ) |>
-  ungroup() |>
   mutate(
-  first_event_date = if_else(is.infinite(first_event_date), as.Date(NA), first_event_date),
-  second_event_date = if_else(is.infinite(second_event_date), as.Date(NA), second_event_date),
-  # person-years until first event or last follow-up
-  py_A = as.numeric(pmin(first_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
-  # person-years until second event or last follow-up
-  py_B = as.numeric(pmin(second_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25
-)
+    # Person-years until first event or last follow-up (Censoring)
+    py_A = as.numeric(pmin(first_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
+    # Person-years until second event or last follow-up
+    py_B = as.numeric(pmin(second_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
+    # Event flags
+    event_A = as.integer(!is.na(first_event_date)),
+    event_B = as.integer(!is.na(second_event_date))
+  )
 
-# Unique person-level data
+# 3. Create the final person-level dataframe
 person_df = table_data |>
   group_by(id) |>
   summarise(
-    event_A = first(event_A),
-    event_B = first(event_B),
     male = first(male),
     age = first(age)
   ) |>
-  ungroup() |>
+  inner_join(event_dates, by = "id") |>
   mutate(
     age_group = case_when(
       age < 30 ~ "18-29 years",
@@ -210,8 +182,7 @@ person_df = table_data |>
       age < 60 ~ "50-59 years",
       TRUE ~ "60+ years"
     )
-  ) |>
-  left_join(event_dates |> select(id, py_A, py_B), by = "id")
+  )
 ```
 
 
