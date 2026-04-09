@@ -161,6 +161,7 @@ table_data = table_data |>
     event_A = as.integer(!is.infinite(first_event_date))
   ) |>
   ungroup()
+
 # Event part B: second occurrence of htn or meds after baseline
 table_data = table_data |>
   group_by(id) |>
@@ -172,14 +173,24 @@ table_data = table_data |>
   ungroup() |>
   select(-cum_htn)
 
-# Person-years
-py_df = table_data |>
+# First and second event dates and last visit per person
+event_dates = table_data |>
   group_by(id) |>
   summarise(
-    entry = min(visit_date),
-    last = max(visit_date)
+    entry_date = min(visit_date),
+    last_date = max(visit_date),
+    first_event_date = min(visit_date[visit_number > 1 & htn_or_meds == 1], na.rm = TRUE),
+    second_event_date = min(visit_date[visit_number > 1 & cumsum(htn_or_meds == 1) >= 2], na.rm = TRUE)
   ) |>
-  mutate(py = as.numeric(last - entry) / 365)
+  ungroup() |>
+  mutate(
+  first_event_date = if_else(is.infinite(first_event_date), as.Date(NA), first_event_date),
+  second_event_date = if_else(is.infinite(second_event_date), as.Date(NA), second_event_date),
+  # person-years until first event or last follow-up
+  py_A = as.numeric(pmin(first_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
+  # person-years until second event or last follow-up
+  py_B = as.numeric(pmin(second_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25
+)
 
 # Unique person-level data
 person_df = table_data |>
@@ -190,9 +201,6 @@ person_df = table_data |>
     male = first(male),
     age = first(age)
   ) |>
-  left_join(py_df |>
-              select(id, py),
-            by = "id") |>
   ungroup() |>
   mutate(
     age_group = case_when(
@@ -202,19 +210,23 @@ person_df = table_data |>
       age < 60 ~ "50-59 years",
       TRUE ~ "60+ years"
     )
-  )
+  ) |>
+  left_join(event_dates |> select(id, py_A, py_B), by = "id")
 ```
 
 
 ```{R}
 make_table_kable <- function(df, event_var) {
   
+  # Which PY column to use?
+  py_col <- ifelse(event_var == "event_A", "py_A", "py_B")
+  
   table_rows <- list()
   
   # Total row
   n_total <- nrow(df)
   e_total <- sum(df[[event_var]], na.rm = TRUE)
-  py_total <- sum(df$py, na.rm = TRUE)
+  py_total <- sum(df[[py_col]], na.rm = TRUE)
   inc_total <- ifelse(py_total > 0, (e_total / py_total) * 1000, NA)
   
   table_rows[[1]] <- data.frame(
@@ -239,7 +251,7 @@ make_table_kable <- function(df, event_var) {
   # Sex sub-rows
   for (sex in c(1,0)) {
     sub <- df[df$male == sex, ]
-    py_sub <- sum(sub$py, na.rm = TRUE)
+    py_sub <- sum(sub[[py_col]], na.rm = TRUE)
     inc_sub <- ifelse(py_sub > 0, (sum(sub[[event_var]], na.rm = TRUE) / py_sub) * 1000, NA)
     table_rows[[length(table_rows)+1]] <- data.frame(
       Category = ifelse(sex == 1, "Male", "Female"),
@@ -266,7 +278,7 @@ make_table_kable <- function(df, event_var) {
   for (g in groups) {
     sub <- df[df$age_group == g, ]
     if (nrow(sub) > 0) {
-      py_sub <- sum(sub$py, na.rm = TRUE)
+      py_sub <- sum(sub[[py_col]], na.rm = TRUE)
       inc_sub <- ifelse(py_sub > 0, (sum(sub[[event_var]], na.rm = TRUE) / py_sub) * 1000, NA)
       table_rows[[length(table_rows)+1]] <- data.frame(
         Category = g,
