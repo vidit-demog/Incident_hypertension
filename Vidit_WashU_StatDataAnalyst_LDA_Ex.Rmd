@@ -123,19 +123,12 @@ table_data = full_data
 # Sort by id and visit date
 table_data = table_data %>% arrange(id, visit_date)
 
-# Create average BP per visit
-table_data = table_data %>%
-  mutate(
-    sbp = rowMeans(cbind(sbp1, sbp2, sbp3), na.rm = TRUE),
-    dbp = rowMeans(cbind(dbp1, dbp2, dbp3), na.rm = TRUE)
-  )
-
 # Create medication indicator
 table_data = table_data %>% mutate(meds = a_med)
 
 # Define hypertension (NA preserved if BP missing)
 table_data = table_data %>%
-  mutate(htn = ifelse(!is.na(sbp) & !is.na(dbp), as.integer(sbp >= 130 | dbp >= 80), NA_integer_))
+  mutate(htn = ifelse(!is.na(avg_sbp) & !is.na(avg_dbp), as.integer(avg_sbp >= 130 | avg_dbp >= 80), NA_integer_))
 
 # Keep ids with entry visit
 baseline = table_data %>% filter(tolower(visit_type) == "entry")
