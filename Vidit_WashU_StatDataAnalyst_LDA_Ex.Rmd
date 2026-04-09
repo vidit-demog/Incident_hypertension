@@ -117,63 +117,174 @@ head(full_data, 20)
 ## Incident Hypertension
 
 ```{R}
-make_table_kable = function(df, event_var) {
+# Copy data so original is not changed
+table_data = full_data
+
+# Sort by id and visit date
+table_data = table_data %>% arrange(id, visit_date)
+
+# Create average BP per visit
+table_data = table_data %>%
+  mutate(
+    sbp = rowMeans(cbind(sbp1, sbp2, sbp3), na.rm = TRUE),
+    dbp = rowMeans(cbind(dbp1, dbp2, dbp3), na.rm = TRUE)
+  )
+
+# Create medication indicator
+table_data = table_data %>% mutate(meds = a_med)
+
+# Define hypertension (NA preserved if BP missing)
+table_data = table_data %>%
+  mutate(htn = ifelse(!is.na(sbp) & !is.na(dbp), as.integer(sbp >= 130 | dbp >= 80), NA_integer_))
+
+# Keep ids with entry visit
+baseline = table_data %>% filter(tolower(visit_type) == "entry")
+ids = unique(baseline$id)
+table_data = table_data %>% filter(id %in% ids)
+
+# Order again and define visit number
+table_data = table_data %>% 
+  arrange(id, visit_date) %>%
+  group_by(id) %>%
+  mutate(visit_number = row_number()) %>%
+  ungroup()
+
+# Baseline row
+baseline = table_data %>% filter(visit_number == 1)
+
+# Disease free at baseline (only htn=0 & meds=0)
+baseline_df = baseline %>% filter(htn == 0 & meds == 0)
+
+# Keep only disease free
+table_data = table_data %>% filter(id %in% baseline_df$id)
+
+# Event part A: incident hypertension or medication use (NA-safe)
+table_data = table_data %>%
+  group_by(id) %>%
+  mutate(event_A = as.integer(any((htn == 1 | meds == 1), na.rm = TRUE))) %>%
+  ungroup()
+
+# Event part B: two visits with hypertension (NA-safe)
+table_data = table_data %>%
+  group_by(id) %>%
+  mutate(event_B = as.integer(sum(htn == 1, na.rm = TRUE) >= 2)) %>%
+  ungroup()
+
+# Person-years
+entry_dates = table_data %>% group_by(id) %>% summarise(entry = min(visit_date))
+last_dates = table_data %>% group_by(id) %>% summarise(last = max(visit_date))
+py_df = entry_dates %>% inner_join(last_dates, by = "id") %>%
+  mutate(py = as.numeric(last - entry) / 365)
+
+# Unique person-level data
+person_df = table_data %>%
+  group_by(id) %>%
+  summarise(
+    event_A = first(event_A),
+    event_B = first(event_B),
+    male = first(male),
+    age = first(age)
+  ) %>%
+  left_join(py_df %>% select(id, py), by = "id") %>%
+  ungroup()
+
+# Age groups
+person_df = person_df %>%
+  mutate(age_group = case_when(
+    age < 30 ~ "18-29 years",
+    age < 40 ~ "30-39 years",
+    age < 50 ~ "40-49 years",
+    age < 60 ~ "50-59 years",
+    TRUE ~ "60+ years"
+  ))
+```
+
+
+```{R}
+make_table_kable <- function(df, event_var) {
   
-  # Prepare empty list to store rows
-  table_rows = list()
+  table_rows <- list()
   
   # Total row
-  n = nrow(df)
-  e = sum(df[[event_var]], na.rm = TRUE)
-  py = sum(df$py, na.rm = TRUE)
-  inc = ifelse(py > 0, (e / py) * 1000, NA)
-  table_rows[[1]] = data.frame(
-    Category = "Total",
-    `Disease Free (n)` = n,
-    `Events (n)` = e,
-    `Person-Years` = round(py,2),
-    `Incidence per 1000 PYs` = round(inc,2)
+  n_total <- nrow(df)
+  e_total <- sum(df[[event_var]], na.rm = TRUE)
+  py_total <- sum(df$py, na.rm = TRUE)
+  inc_total <- ifelse(py_total > 0, (e_total / py_total) * 1000, NA)
+  
+  table_rows[[1]] <- data.frame(
+    Category = "**Total**",
+    `Disease Free (n)` = n_total,
+    `Events (n)` = e_total,
+    `Person-Years` = round(py_total, 2),
+    `Incidence per 1000 PYs` = round(inc_total, 2),
+    stringsAsFactors = FALSE
   )
   
-  # Sex rows
+  # Sex header row
+  table_rows[[2]] <- data.frame(
+    Category = "**Sex**",
+    `Disease Free (n)` = "",
+    `Events (n)` = "",
+    `Person-Years` = "",
+    `Incidence per 1000 PYs` = "",
+    stringsAsFactors = FALSE
+  )
+  
+  # Sex sub-rows
   for (sex in c(1,0)) {
-    sub = df[df$male == sex, ]
-    py_sub = sum(sub$py, na.rm = TRUE)
-    inc_sub = ifelse(py_sub > 0, (sum(sub[[event_var]], na.rm = TRUE) / py_sub) * 1000, NA)
-    table_rows[[length(table_rows)+1]] = data.frame(
-      Category = ifelse(sex==1,"Male","Female"),
+    sub <- df[df$male == sex, ]
+    py_sub <- sum(sub$py, na.rm = TRUE)
+    inc_sub <- ifelse(py_sub > 0, (sum(sub[[event_var]], na.rm = TRUE) / py_sub) * 1000, NA)
+    table_rows[[length(table_rows)+1]] <- data.frame(
+      Category = ifelse(sex == 1, "Male", "Female"),
       `Disease Free (n)` = nrow(sub),
       `Events (n)` = sum(sub[[event_var]], na.rm = TRUE),
-      `Person-Years` = round(py_sub,2),
-      `Incidence per 1000 PYs` = round(inc_sub,2)
+      `Person-Years` = round(py_sub, 2),
+      `Incidence per 1000 PYs` = round(inc_sub, 2),
+      stringsAsFactors = FALSE
     )
   }
   
-  # Age group rows
-  groups = c("18-29 years","30-39 years","40-49 years","50-59 years","60+ years")
+  # Age group header row
+  table_rows[[length(table_rows)+1]] <- data.frame(
+    Category = "**Age group**",
+    `Disease Free (n)` = "",
+    `Events (n)` = "",
+    `Person-Years` = "",
+    `Incidence per 1000 PYs` = "",
+    stringsAsFactors = FALSE
+  )
+  
+  # Age group sub-rows
+  groups <- c("18-29 years","30-39 years","40-49 years","50-59 years","60+ years")
   for (g in groups) {
-    sub = df[df$age_group == g, ]
+    sub <- df[df$age_group == g, ]
     if (nrow(sub) > 0) {
-      py_sub = sum(sub$py, na.rm = TRUE)
-      inc_sub = ifelse(py_sub > 0, (sum(sub[[event_var]], na.rm = TRUE) / py_sub) * 1000, NA)
-      table_rows[[length(table_rows)+1]] = data.frame(
+      py_sub <- sum(sub$py, na.rm = TRUE)
+      inc_sub <- ifelse(py_sub > 0, (sum(sub[[event_var]], na.rm = TRUE) / py_sub) * 1000, NA)
+      table_rows[[length(table_rows)+1]] <- data.frame(
         Category = g,
         `Disease Free (n)` = nrow(sub),
         `Events (n)` = sum(sub[[event_var]], na.rm = TRUE),
-        `Person-Years` = round(py_sub,2),
-        `Incidence per 1000 PYs` = round(inc_sub,2)
+        `Person-Years` = round(py_sub, 2),
+        `Incidence per 1000 PYs` = round(inc_sub, 2),
+        stringsAsFactors = FALSE
       )
     }
   }
   
   # Bind all rows
-  out_table = do.call(rbind, table_rows)
+  out_table <- do.call(rbind, table_rows)
   
-  # Print kableExtra table
+  # Column names
+  colnames(out_table) <- c("Category","Disease Free (n)","Events (n)","Person-Years","Incidence per 1000 PYs")
+  
   out_table %>%
     kbl(caption = paste0("Incident Hypertension - ", event_var),
+        escape = FALSE,  # bold markdown works
         align = "lrrrr") %>%
-    kable_styling(full_width = FALSE, position = "left", bootstrap_options = c("striped","hover"))
+    kable_styling(full_width = FALSE, position = "left", 
+                  bootstrap_options = c("striped","hover"))
 }
 
 # Part A table
