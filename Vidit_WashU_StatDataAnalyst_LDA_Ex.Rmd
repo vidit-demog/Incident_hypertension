@@ -161,13 +161,21 @@ table_data = table_data %>% filter(id %in% baseline_df$id)
 # Event part A: incident hypertension or medication use (NA-safe)
 table_data = table_data %>%
   group_by(id) %>%
-  mutate(event_A = as.integer(any((htn == 1 | meds == 1), na.rm = TRUE))) %>%
+  mutate(
+    event_A = as.integer(
+      any(visit_number == 1 & (htn == 1 | meds == 1), na.rm = TRUE)
+    )
+  ) %>%
   ungroup()
 
 # Event part B: two visits with hypertension (NA-safe)
 table_data = table_data %>%
   group_by(id) %>%
-  mutate(event_B = as.integer(sum(htn == 1, na.rm = TRUE) >= 2)) %>%
+  mutate(
+    event_B = as.integer(
+      any(visit_number == 2 & (htn == 1 | meds == 1), na.rm = TRUE)
+    )
+  ) %>%
   ungroup()
 
 # Person-years

@@ -1031,13 +1031,21 @@ table_data = table_data %&gt;% filter(id %in% baseline_df$id)
 # Event part A: incident hypertension or medication use (NA-safe)
 table_data = table_data %&gt;%
   group_by(id) %&gt;%
-  mutate(event_A = as.integer(any((htn == 1 | meds == 1), na.rm = TRUE))) %&gt;%
+  mutate(
+    event_A = as.integer(
+      any(visit_number == 1 &amp; (htn == 1 | meds == 1), na.rm = TRUE)
+    )
+  ) %&gt;%
   ungroup()
 
 # Event part B: two visits with hypertension (NA-safe)
 table_data = table_data %&gt;%
   group_by(id) %&gt;%
-  mutate(event_B = as.integer(sum(htn == 1, na.rm = TRUE) &gt;= 2)) %&gt;%
+  mutate(
+    event_B = as.integer(
+      any(visit_number == 2 &amp; (htn == 1 | meds == 1), na.rm = TRUE)
+    )
+  ) %&gt;%
   ungroup()
 
 # Person-years
@@ -1187,13 +1195,13 @@ Incidence per 1000 PYs
 2608
 </td>
 <td style="text-align:right;">
-1331
+0
 </td>
 <td style="text-align:right;">
 12293.37
 </td>
 <td style="text-align:right;">
-108.27
+0
 </td>
 </tr>
 <tr>
@@ -1217,13 +1225,13 @@ Male
 1352
 </td>
 <td style="text-align:right;">
-686
+0
 </td>
 <td style="text-align:right;">
 6430.33
 </td>
 <td style="text-align:right;">
-106.68
+0
 </td>
 </tr>
 <tr>
@@ -1234,13 +1242,13 @@ Female
 1256
 </td>
 <td style="text-align:right;">
-645
+0
 </td>
 <td style="text-align:right;">
 5863.03
 </td>
 <td style="text-align:right;">
-110.01
+0
 </td>
 </tr>
 <tr>
@@ -1264,13 +1272,13 @@ Female
 129
 </td>
 <td style="text-align:right;">
-65
+0
 </td>
 <td style="text-align:right;">
 634.82
 </td>
 <td style="text-align:right;">
-102.39
+0
 </td>
 </tr>
 <tr>
@@ -1281,13 +1289,13 @@ Female
 316
 </td>
 <td style="text-align:right;">
-156
+0
 </td>
 <td style="text-align:right;">
 1491.22
 </td>
 <td style="text-align:right;">
-104.61
+0
 </td>
 </tr>
 <tr>
@@ -1298,13 +1306,13 @@ Female
 554
 </td>
 <td style="text-align:right;">
-278
+0
 </td>
 <td style="text-align:right;">
 2592.26
 </td>
 <td style="text-align:right;">
-107.24
+0
 </td>
 </tr>
 <tr>
@@ -1315,13 +1323,13 @@ Female
 715
 </td>
 <td style="text-align:right;">
-375
+0
 </td>
 <td style="text-align:right;">
 3315.73
 </td>
 <td style="text-align:right;">
-113.1
+0
 </td>
 </tr>
 <tr>
@@ -1332,13 +1340,13 @@ Female
 894
 </td>
 <td style="text-align:right;">
-457
+0
 </td>
 <td style="text-align:right;">
 4259.34
 </td>
 <td style="text-align:right;">
-107.29
+0
 </td>
 </tr>
 </tbody>
@@ -1377,13 +1385,13 @@ Incidence per 1000 PYs
 2608
 </td>
 <td style="text-align:right;">
-774
+309
 </td>
 <td style="text-align:right;">
 12293.37
 </td>
 <td style="text-align:right;">
-62.96
+25.14
 </td>
 </tr>
 <tr>
@@ -1407,13 +1415,13 @@ Male
 1352
 </td>
 <td style="text-align:right;">
-399
+162
 </td>
 <td style="text-align:right;">
 6430.33
 </td>
 <td style="text-align:right;">
-62.05
+25.19
 </td>
 </tr>
 <tr>
@@ -1424,13 +1432,13 @@ Female
 1256
 </td>
 <td style="text-align:right;">
-375
+147
 </td>
 <td style="text-align:right;">
 5863.03
 </td>
 <td style="text-align:right;">
-63.96
+25.07
 </td>
 </tr>
 <tr>
@@ -1454,13 +1462,13 @@ Female
 129
 </td>
 <td style="text-align:right;">
-34
+16
 </td>
 <td style="text-align:right;">
 634.82
 </td>
 <td style="text-align:right;">
-53.56
+25.2
 </td>
 </tr>
 <tr>
@@ -1471,13 +1479,13 @@ Female
 316
 </td>
 <td style="text-align:right;">
-95
+33
 </td>
 <td style="text-align:right;">
 1491.22
 </td>
 <td style="text-align:right;">
-63.71
+22.13
 </td>
 </tr>
 <tr>
@@ -1488,13 +1496,13 @@ Female
 554
 </td>
 <td style="text-align:right;">
-161
+65
 </td>
 <td style="text-align:right;">
 2592.26
 </td>
 <td style="text-align:right;">
-62.11
+25.07
 </td>
 </tr>
 <tr>
@@ -1505,13 +1513,13 @@ Female
 715
 </td>
 <td style="text-align:right;">
-217
+89
 </td>
 <td style="text-align:right;">
 3315.73
 </td>
 <td style="text-align:right;">
-65.45
+26.84
 </td>
 </tr>
 <tr>
@@ -1522,13 +1530,13 @@ Female
 894
 </td>
 <td style="text-align:right;">
-267
+106
 </td>
 <td style="text-align:right;">
 4259.34
 </td>
 <td style="text-align:right;">
-62.69
+24.89
 </td>
 </tr>
 </tbody>
