@@ -118,86 +118,91 @@ head(full_data, 20)
 
 ```{R}
 # Copy data so original is not changed
-table_data = full_data
-
-# Sort by id and visit date
-table_data = table_data %>% arrange(id, visit_date)
-
-# Create medication indicator
-table_data = table_data %>% mutate(meds = a_med)
-
-# Define hypertension (NA preserved if BP missing)
-table_data = table_data %>%
-  mutate(htn = ifelse(!is.na(avg_sbp) & !is.na(avg_dbp), as.integer(avg_sbp >= 130 | avg_dbp >= 80), NA_integer_))
+table_data = full_data |>
+  arrange(id, visit_date) |>
+  mutate(
+    meds = a_med,
+    htn = ifelse(!is.na(avg_sbp) & !is.na(avg_dbp),
+                 as.integer(avg_sbp >= 130 | avg_dbp >= 80),
+                 NA_integer_),
+    htn_or_meds = as.integer(htn == 1 | meds == 1)
+  )
 
 # Keep ids with entry visit
-baseline = table_data %>% filter(tolower(visit_type) == "entry")
-ids = unique(baseline$id)
-table_data = table_data %>% filter(id %in% ids)
+baseline = table_data |>
+  filter(tolower(visit_type) == "entry")
 
-# Order again and define visit number
-table_data = table_data %>% 
-  arrange(id, visit_date) %>%
-  group_by(id) %>%
-  mutate(visit_number = row_number()) %>%
+ids = unique(baseline$id)
+
+table_data = table_data |>
+  filter(id %in% ids) |>
+  group_by(id) |>
+  arrange(visit_date) |>
+  mutate(visit_number = row_number()) |>
   ungroup()
 
 # Baseline row
-baseline = table_data %>% filter(visit_number == 1)
+baseline = table_data |>
+  filter(visit_number == 1)
 
 # Disease free at baseline (only htn=0 & meds=0)
-baseline_df = baseline %>% filter(htn == 0 & meds == 0)
+baseline_df = baseline |>
+  filter(htn == 0 & meds == 0)
 
 # Keep only disease free
-table_data = table_data %>% filter(id %in% baseline_df$id)
+table_data = table_data |>
+  filter(id %in% baseline_df$id)
 
-# Event part A: incident hypertension or medication use (NA-safe)
-table_data = table_data %>%
-  group_by(id) %>%
+# Event part A: first occurrence of htn or meds after baseline
+table_data = table_data |>
+  group_by(id) |>
   mutate(
-    event_A = as.integer(
-      any(visit_number == 1 & (htn == 1 | meds == 1), na.rm = TRUE)
-    )
-  ) %>%
+    first_event_date = min(visit_date[visit_number > 1 & htn_or_meds == 1], na.rm = TRUE),
+    event_A = as.integer(!is.infinite(first_event_date))
+  ) |>
   ungroup()
-
-# Event part B: two visits with hypertension (NA-safe)
-table_data = table_data %>%
-  group_by(id) %>%
+# Event part B: second occurrence of htn or meds after baseline
+table_data = table_data |>
+  group_by(id) |>
   mutate(
-    event_B = as.integer(
-      any(visit_number == 2 & (htn == 1 | meds == 1), na.rm = TRUE)
-    )
-  ) %>%
-  ungroup()
+    cum_htn = cumsum(visit_number > 1 & htn_or_meds == 1),
+    second_event_date = min(visit_date[cum_htn >= 2], na.rm = TRUE),
+    event_B = as.integer(!is.infinite(second_event_date))
+  ) |>
+  ungroup() |>
+  select(-cum_htn)
 
 # Person-years
-entry_dates = table_data %>% group_by(id) %>% summarise(entry = min(visit_date))
-last_dates = table_data %>% group_by(id) %>% summarise(last = max(visit_date))
-py_df = entry_dates %>% inner_join(last_dates, by = "id") %>%
+py_df = table_data |>
+  group_by(id) |>
+  summarise(
+    entry = min(visit_date),
+    last = max(visit_date)
+  ) |>
   mutate(py = as.numeric(last - entry) / 365)
 
 # Unique person-level data
-person_df = table_data %>%
-  group_by(id) %>%
+person_df = table_data |>
+  group_by(id) |>
   summarise(
     event_A = first(event_A),
     event_B = first(event_B),
     male = first(male),
     age = first(age)
-  ) %>%
-  left_join(py_df %>% select(id, py), by = "id") %>%
-  ungroup()
-
-# Age groups
-person_df = person_df %>%
-  mutate(age_group = case_when(
-    age < 30 ~ "18-29 years",
-    age < 40 ~ "30-39 years",
-    age < 50 ~ "40-49 years",
-    age < 60 ~ "50-59 years",
-    TRUE ~ "60+ years"
-  ))
+  ) |>
+  left_join(py_df |>
+              select(id, py),
+            by = "id") |>
+  ungroup() |>
+  mutate(
+    age_group = case_when(
+      age < 30 ~ "18-29 years",
+      age < 40 ~ "30-39 years",
+      age < 50 ~ "40-49 years",
+      age < 60 ~ "50-59 years",
+      TRUE ~ "60+ years"
+    )
+  )
 ```
 
 
