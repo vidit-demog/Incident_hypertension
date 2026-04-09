@@ -282,3 +282,46 @@ make_table_kable(person_df, "event_A")
 # Part B table
 make_table_kable(person_df, "event_B")
 ```
+
+## Regression
+
+```{R}
+# Create BMI
+```
+
+```{R}
+# Univariable models
+model_age = glm(event_A ~ age10,
+                offset = log(py_A),
+                family = poisson(),
+                data = person_df)
+
+model_sex = glm(event_A ~ male,
+                offset = log(py_A),
+                family = poisson(),
+                data = person_df)
+
+model_bmi = glm(event_A ~ bmi_cat,
+                offset = log(py_A),
+                family = poisson(),
+                data = person_df)
+
+# Multivariable model
+model_multi = glm(event_A ~ age10 + male + bmi_cat,
+                  offset = log(py_A),
+                  family = poisson(),
+                  data = person_df)
+
+# IRRs and CIs
+exp(coef(model_age))
+exp(confint(model_age))
+
+exp(coef(model_sex))
+exp(confint(model_sex))
+
+exp(coef(model_bmi))
+exp(confint(model_bmi))
+
+exp(coef(model_multi))
+exp(confint(model_multi))
+```
