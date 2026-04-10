@@ -12,6 +12,7 @@ library(here)
 library(tidyverse)
 library(janitor)
 library(kableExtra)
+library(glmnet)
 ```
 
 ```{R}
@@ -287,9 +288,14 @@ make_table_kable(person_df, "event_B")
 
 ```{R}
 # Create BMI
+full_data_bmi = full_data |>
+  dplyr::select(id, height, weight) |>
+  mutate(height = height/100) |> # Converting height to meters
+  mutate(bmi = weight/(height^2))
 ```
 
 ```{R}
+person_df = person_df 
 # Univariable models
 model_age = glm(event_A ~ age10,
                 offset = log(py_A),
