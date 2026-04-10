@@ -292,10 +292,29 @@ full_data_bmi = full_data |>
   dplyr::select(id, height, weight) |>
   mutate(height = height/100) |> # Converting height to meters
   mutate(bmi = weight/(height^2))
+
+bmi_data = full_data_bmi |>
+  dplyr::select(-c(height, weight))
 ```
 
 ```{R}
-person_df = person_df 
+person_df = person_df |>
+  left_join(bmi_data, by = 'id') |>
+  mutate(age10 = age/10)
+```
+
+```{R}
+person_df = person_df |>
+  mutate(
+    event_A = as.integer(event_A),
+    py_A = as.numeric(py_A)
+  ) |>
+  filter(
+    !is.na(event_A),
+    !is.na(py_A),
+    py_A > 0
+  )
+
 # Univariable models
 model_age = glm(event_A ~ age10,
                 offset = log(py_A),
@@ -307,13 +326,13 @@ model_sex = glm(event_A ~ male,
                 family = poisson(),
                 data = person_df)
 
-model_bmi = glm(event_A ~ bmi_cat,
+model_bmi = glm(event_A ~ bmi,
                 offset = log(py_A),
                 family = poisson(),
                 data = person_df)
 
 # Multivariable model
-model_multi = glm(event_A ~ age10 + male + bmi_cat,
+model_multi = glm(event_A ~ age10 + male + bmi,
                   offset = log(py_A),
                   family = poisson(),
                   data = person_df)
