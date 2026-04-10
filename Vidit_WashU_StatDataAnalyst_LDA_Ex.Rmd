@@ -118,14 +118,14 @@ head(full_data, 20)
 ## Incident Hypertension
 
 ```{R}
-# Helper function to prevent "no non-missing arguments" warnings
+# Helper function
 safe_min <- function(x) {
   if (length(x) == 0 || all(is.na(x))) return(as.Date(NA))
   min(x, na.rm = TRUE)
 }
 
-# 1. Initial cleaning and baseline filtering
-table_data = full_data |>
+# 1. Initial cleaning (ALL visits → for Part B)
+table_data_B = full_data |>
   arrange(id, visit_date) |>
   mutate(
     meds = a_med,
@@ -138,43 +138,94 @@ table_data = full_data |>
   mutate(visit_number = row_number()) |>
   ungroup()
 
+# Create clinic-only version (for Part A)
+table_data_A = table_data_B |>
+  filter(visit_type != "home")
+
 # Keep only those who were disease-free at visit 1
-baseline_df_ids = table_data |>
+baseline_df_ids_A = table_data_A |>
   filter(visit_number == 1, htn == 0, meds == 0) |>
   pull(id)
 
-table_data = table_data |>
-  filter(id %in% baseline_df_ids)
+table_data_A = table_data_A |>
+  filter(id %in% baseline_df_ids_A)
 
-# 2. Calculate dates and Person-Years 
-event_dates = table_data |>
+# Calculate dates and Person-Years 
+event_dates_A = table_data_A |>
   arrange(id, visit_date) |>
   group_by(id) |>
   summarise(
     entry_date = min(visit_date),
-    last_date = max(visit_date),
-    # Using safe_min to avoid warnings
+    last_visit = max(visit_date),
+    exit_date = first(exit_date),
+    
+    last_date = pmin(last_visit, exit_date, na.rm = TRUE),
+
     first_event_date = safe_min(visit_date[visit_number > 1 & htn_or_meds == 1]),
     second_event_date = safe_min(visit_date[visit_number > 1 & cumsum(htn_or_meds == 1) >= 2])
   ) |>
   mutate(
-    # Person-years until first event or last follow-up (Censoring)
     py_A = as.numeric(pmin(first_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
-    # Person-years until second event or last follow-up
     py_B = as.numeric(pmin(second_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
-    # Event flags
     event_A = as.integer(!is.na(first_event_date)),
     event_B = as.integer(!is.na(second_event_date))
   )
 
-# 3. Create the final person-level dataframe
-person_df = table_data |>
+# Final person-level dataset (Part A)
+person_df_A = table_data_A |>
   group_by(id) |>
   summarise(
     male = first(male),
     age = first(age)
   ) |>
-  inner_join(event_dates, by = "id") |>
+  inner_join(event_dates_A, by = "id") |>
+  mutate(
+    age_group = case_when(
+      age < 30 ~ "18-29 years",
+      age < 40 ~ "30-39 years",
+      age < 50 ~ "40-49 years",
+      age < 60 ~ "50-59 years",
+      TRUE ~ "60+ years"
+    )
+  )
+
+# Keep only those who were disease-free at visit 1
+baseline_df_ids_B = table_data_B |>
+  filter(visit_number == 1, htn == 0, meds == 0) |>
+  pull(id)
+
+table_data_B = table_data_B |>
+  filter(id %in% baseline_df_ids_B)
+
+# Calculate dates and Person-Years 
+event_dates_B = table_data_B |>
+  arrange(id, visit_date) |>
+  group_by(id) |>
+  summarise(
+    entry_date = min(visit_date),
+    last_visit = max(visit_date),
+    exit_date = first(exit_date),
+    
+    last_date = pmin(last_visit, exit_date, na.rm = TRUE),
+
+    first_event_date = safe_min(visit_date[visit_number > 1 & htn_or_meds == 1]),
+    second_event_date = safe_min(visit_date[visit_number > 1 & cumsum(htn_or_meds == 1) >= 2])
+  ) |>
+  mutate(
+    py_A = as.numeric(pmin(first_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
+    py_B = as.numeric(pmin(second_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
+    event_A = as.integer(!is.na(first_event_date)),
+    event_B = as.integer(!is.na(second_event_date))
+  )
+
+# Final person-level dataset (Part B)
+person_df_B = table_data_B |>
+  group_by(id) |>
+  summarise(
+    male = first(male),
+    age = first(age)
+  ) |>
+  inner_join(event_dates_B, by = "id") |>
   mutate(
     age_group = case_when(
       age < 30 ~ "18-29 years",
@@ -278,33 +329,35 @@ make_table_kable <- function(df, event_var) {
 }
 
 # Part A table
-make_table_kable(person_df, "event_A")
+make_table_kable(person_df_A, "event_A")
 
 # Part B table
-make_table_kable(person_df, "event_B")
+make_table_kable(person_df_B, "event_B")
 ```
 
 ## Regression
 
 ```{R}
+# Baseline weight
+weight_df = vis_clean |>
+  filter(visit_type == "entry") |>
+  dplyr::select(id, weight)
 # Create BMI
-full_data_bmi = full_data |>
-  dplyr::select(id, height, weight) |>
-  mutate(height = height/100) |> # Converting height to meters
-  mutate(bmi = weight/(height^2))
-
-bmi_data = full_data_bmi |>
-  dplyr::select(-c(height, weight))
+bmi_data = base_clean |>
+  left_join(weight_df, by = "id") |>
+  mutate(height = height / 100) |> # Height to meters
+  mutate(bmi = weight / (height^2)) |>
+  dplyr::select(id, bmi)
 ```
 
 ```{R}
-person_df = person_df |>
+person_df_A = person_df_A |>
   left_join(bmi_data, by = 'id') |>
   mutate(age10 = age/10)
 ```
 
 ```{R, message= FALSE}
-person_df = person_df |>
+person_df_A = person_df_A |>
   mutate(
     event_A = as.integer(event_A),
     py_A = as.numeric(py_A), 
@@ -326,23 +379,23 @@ person_df = person_df |>
 model_age = glm(event_A ~ age10,
                 offset = log(py_A),
                 family = poisson(),
-                data = person_df)
+                data = person_df_A)
 
 model_sex = glm(event_A ~ male,
                 offset = log(py_A),
                 family = poisson(),
-                data = person_df)
+                data = person_df_A)
 
 model_bmi = glm(event_A ~ bmi_cat,
                 offset = log(py_A),
                 family = poisson(),
-                data = person_df)
+                data = person_df_A)
 
 # Multivariable model
 model_multi = glm(event_A ~ age10 + male + bmi_cat,
                   offset = log(py_A),
                   family = poisson(),
-                  data = person_df)
+                  data = person_df_A)
 
 # IRRs + CI function
 get_results = function(model) {
@@ -366,18 +419,18 @@ tab_bmi = get_results(model_bmi)
 tab_multi = get_results(model_multi)
 
 tab_age %>%
-  kable(digits = 3, caption = "Univariable Model: Age") %>%
+  kable(digits = 3, caption = "Univariable Model: Age") |>
   kable_styling(full_width = FALSE)
 
 tab_sex %>%
-  kable(digits = 3, caption = "Univariable Model: Sex") %>%
+  kable(digits = 3, caption = "Univariable Model: Sex") |>
   kable_styling(full_width = FALSE)
 
 tab_bmi %>%
-  kable(digits = 3, caption = "Univariable Model: BMI Categories") %>%
+  kable(digits = 3, caption = "Univariable Model: BMI Categories") |>
   kable_styling(full_width = FALSE)
 
 tab_multi %>%
-  kable(digits = 3, caption = "Multivariable Model") %>%
+  kable(digits = 3, caption = "Multivariable Model") |>
   kable_styling(full_width = FALSE)
 ```
