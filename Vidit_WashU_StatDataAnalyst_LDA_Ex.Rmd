@@ -303,17 +303,24 @@ person_df = person_df |>
   mutate(age10 = age/10)
 ```
 
-```{R}
+```{R, message= FALSE}
 person_df = person_df |>
   mutate(
     event_A = as.integer(event_A),
-    py_A = as.numeric(py_A)
+    py_A = as.numeric(py_A), 
+    bmi_cat = case_when(
+      bmi < 18.5 ~ "Underweight",
+      bmi < 25 ~ "Normal",
+      bmi < 30 ~ "Overweight",
+      TRUE ~ "Obese"
+    )
   ) |>
   filter(
     !is.na(event_A),
     !is.na(py_A),
     py_A > 0
   )
+
 
 # Univariable models
 model_age = glm(event_A ~ age10,
@@ -326,27 +333,51 @@ model_sex = glm(event_A ~ male,
                 family = poisson(),
                 data = person_df)
 
-model_bmi = glm(event_A ~ bmi,
+model_bmi = glm(event_A ~ bmi_cat,
                 offset = log(py_A),
                 family = poisson(),
                 data = person_df)
 
 # Multivariable model
-model_multi = glm(event_A ~ age10 + male + bmi,
+model_multi = glm(event_A ~ age10 + male + bmi_cat,
                   offset = log(py_A),
                   family = poisson(),
                   data = person_df)
 
-# IRRs and CIs
-exp(coef(model_age))
-exp(confint(model_age))
+# IRRs + CI function
+get_results = function(model) {
+  irr = exp(coef(model))
+  ci = exp(confint(model))
+  
+  out = data.frame(
+    Variable = names(irr),
+    IRR = irr,
+    CI_low = ci[,1],
+    CI_high = ci[,2]
+  )
+  
+  return(out)
+}
 
-exp(coef(model_sex))
-exp(confint(model_sex))
+# Build tables
+tab_age = get_results(model_age)
+tab_sex = get_results(model_sex)
+tab_bmi = get_results(model_bmi)
+tab_multi = get_results(model_multi)
 
-exp(coef(model_bmi))
-exp(confint(model_bmi))
+tab_age %>%
+  kable(digits = 3, caption = "Univariable Model: Age") %>%
+  kable_styling(full_width = FALSE)
 
-exp(coef(model_multi))
-exp(confint(model_multi))
+tab_sex %>%
+  kable(digits = 3, caption = "Univariable Model: Sex") %>%
+  kable_styling(full_width = FALSE)
+
+tab_bmi %>%
+  kable(digits = 3, caption = "Univariable Model: BMI Categories") %>%
+  kable_styling(full_width = FALSE)
+
+tab_multi %>%
+  kable(digits = 3, caption = "Multivariable Model") %>%
+  kable_styling(full_width = FALSE)
 ```
