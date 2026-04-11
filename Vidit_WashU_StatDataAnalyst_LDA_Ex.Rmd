@@ -12,7 +12,6 @@ library(here)
 library(tidyverse)
 library(janitor)
 library(kableExtra)
-library(glmnet)
 ```
 
 ```{R}
@@ -77,6 +76,24 @@ vis_clean = vis |>
     across(starts_with("dbp"), ~ ifelse(.x <= 30, NA, .x))
   )
 summary(vis_clean)
+
+# Extract entry visit dates from visits
+entry_visits = vis_clean |>
+  filter(visit_type == "entry") |>
+  select(id, visit_date) |>
+  rename(entry_visit_date = visit_date)
+
+# Compare with baseline entry_date
+check_entry = base_clean |>
+  select(id, entry_date) |>
+  left_join(entry_visits, by = "id") |>
+  mutate(
+    match = entry_date == entry_visit_date
+  )
+
+# Summary of matches
+table(check_entry$match, useNA = "ifany")
+# Note: We only want to see TRUE- if there are any FALSE then it means some don't match.
 
 # Now cleaning outcome 
 outcome = outcome |>
@@ -407,7 +424,6 @@ person_df_A = person_df_A |>
     !is.na(py_A),
     py_A > 0
   )
-
 
 # Univariable models
 model_age = glm(event_A ~ age10,
