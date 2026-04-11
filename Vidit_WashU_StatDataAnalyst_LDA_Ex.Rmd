@@ -84,9 +84,9 @@ outcome_clean = outcome |>
 summary(outcome_clean)
 
 # Joining the data!
-full_data = base_clean |>
-  left_join(vis_clean, by = "id") |>
-  left_join(outcome_clean, by = "id")
+full_data = vis_clean|>
+  left_join(base_clean, by="id")|>
+  left_join(outcome_clean, by="id")
 
 
 full_data = full_data |>
@@ -97,18 +97,31 @@ full_data = full_data |>
 
 full_data = full_data |>
   mutate(
-    a_med = as.factor(as.integer(
+  a_med = as.integer(
       if_any(
         c(amlodipine, bisoprolol, captopril, carvedilol,
           enalapril, furosemide, hctz, lisinopril,
           losaratan, metoprolol),
-        ~ . == 1
-      )
-    ))
-  )
+        ~ coalesce(.x, 0) == 1
+      ) |
+      str_detect(coalesce(tolower(free_text_med), ""), "ramipril|olmesartan")
+    )
+)
 summary(full_data)
+full_data <- full_data |>
+  dplyr::select(
+    id, age, male, height, weight, entry_date,
+    visit_date, visit_type,
+    sbp1, sbp2, sbp3, avg_sbp,
+    dbp1, dbp2, dbp3, avg_dbp,
+    amlodipine:free_text_med,
+    a_med,
+    everything()
+  )
 
 write_csv(full_data, "files/full_data.csv")
+
+summary(as.factor(full_data$free_text_med))
 ```
 
 ```{R}
@@ -129,11 +142,11 @@ table_data_B = full_data |>
   arrange(id, visit_date) |>
   mutate(
     meds = a_med,
-    htn = ifelse(!is.na(avg_sbp) & !is.na(avg_dbp),
-                 as.integer(avg_sbp >= 130 | avg_dbp >= 80),
-                 NA_integer_),
-    htn_or_meds = as.integer(htn == 1 | meds == 1)
-  ) |>
+    htn = as.integer(
+    (!is.na(avg_sbp) & avg_sbp >= 130) |
+    (!is.na(avg_dbp) & avg_dbp >= 80)
+    ),
+    htn_or_meds = as.integer(htn == 1 | meds == 1)) |>
   group_by(id) |>
   mutate(visit_number = row_number()) |>
   ungroup()
@@ -204,7 +217,7 @@ event_dates_B = table_data_B |>
   summarise(
     entry_date = min(visit_date),
     last_visit = max(visit_date),
-    exit_date = first(exit_date),
+    exit_date = unique(exit_date),
     
     last_date = pmin(last_visit, exit_date, na.rm = TRUE),
 
@@ -239,20 +252,20 @@ person_df_B = table_data_B |>
 
 
 ```{R}
-make_table_kable <- function(df, event_var) {
+make_table_kable = function(df, event_var) {
   
   # Which PY column to use?
-  py_col <- ifelse(event_var == "event_A", "py_A", "py_B")
+  py_col = ifelse(event_var == "event_A", "py_A", "py_B")
   
-  table_rows <- list()
+  table_rows = list()
   
   # Total row
-  n_total <- nrow(df)
-  e_total <- sum(df[[event_var]], na.rm = TRUE)
-  py_total <- sum(df[[py_col]], na.rm = TRUE)
-  inc_total <- ifelse(py_total > 0, (e_total / py_total) * 1000, NA)
+  n_total = nrow(df)
+  e_total = sum(df[[event_var]], na.rm = TRUE)
+  py_total = sum(df[[py_col]], na.rm = TRUE)
+  inc_total = ifelse(py_total > 0, (e_total / py_total) * 1000, NA)
   
-  table_rows[[1]] <- data.frame(
+  table_rows[[1]] = data.frame(
     Category = "**Total**",
     `Disease Free (n)` = n_total,
     `Events (n)` = e_total,
@@ -262,7 +275,7 @@ make_table_kable <- function(df, event_var) {
   )
   
   # Sex header row
-  table_rows[[2]] <- data.frame(
+  table_rows[[2]] = data.frame(
     Category = "**Sex**",
     `Disease Free (n)` = "",
     `Events (n)` = "",
@@ -287,7 +300,7 @@ make_table_kable <- function(df, event_var) {
   }
   
   # Age group header row
-  table_rows[[length(table_rows)+1]] <- data.frame(
+  table_rows[[length(table_rows)+1]] = data.frame(
     Category = "**Age group**",
     `Disease Free (n)` = "",
     `Events (n)` = "",
@@ -315,10 +328,10 @@ make_table_kable <- function(df, event_var) {
   }
   
   # Bind all rows
-  out_table <- do.call(rbind, table_rows)
+  out_table = do.call(rbind, table_rows)
   
   # Column names
-  colnames(out_table) <- c("Category","Disease Free (n)","Events (n)","Person-Years","Incidence per 1000 PYs")
+  colnames(out_table) = c("Category","Disease Free (n)","Events (n)","Person-Years","Incidence per 1000 PYs")
   
   out_table %>%
     kbl(caption = paste0("Incident Hypertension - ", event_var),
