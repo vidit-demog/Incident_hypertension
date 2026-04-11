@@ -113,6 +113,14 @@ full_data = full_data |>
       str_detect(coalesce(tolower(free_text_med), ""), "ramipril|olmesartan")
     )
 )
+# Medicines that were not considered for a_med :-
+# aspirin: antiplatelet (not antihypertensive)
+# atorvastatin: statin (lipid-lowering agent, not antihypertensive)
+# simvastatin: statin (lipid-lowering agent, not antihypertensive)
+# metformin: antidiabetic medication (not antihypertensive)
+# glyburide: antidiabetic medication (not antihypertensive)
+# warfarin (free text): anticoagulant (not antihypertensive)
+
 summary(full_data)
 full_data <- full_data |>
   dplyr::select(
@@ -128,6 +136,8 @@ full_data <- full_data |>
 write_csv(full_data, "files/full_data.csv")
 
 summary(as.factor(full_data$free_text_med))
+# Apart from warfarin rest are drugs blood pressure drugs
+# Note: I read warfarin is a blood thinner so not counting it
 ```
 
 ```{R}
@@ -180,7 +190,7 @@ event_dates_A = table_data_A |>
   summarise(
     entry_date = min(visit_date),
     last_visit = max(visit_date),
-    exit_date = first(exit_date),
+    exit_date = unique(exit_date),
     
     last_date = pmin(last_visit, exit_date, na.rm = TRUE),
 
@@ -389,7 +399,8 @@ person_df_A = person_df_A |>
       bmi < 25 ~ "Normal",
       bmi < 30 ~ "Overweight",
       TRUE ~ "Obese"
-    )
+    ),
+    bmi_cat = factor(bmi_cat, levels = c("Normal", "Overweight", "Obese", "Underweight"))
   ) |>
   filter(
     !is.na(event_A),
@@ -456,4 +467,13 @@ tab_bmi |>
 tab_multi |>
   kable(digits = 3, caption = "Multivariable Model") |>
   kable_styling(full_width = FALSE)
+
+overdispersion_check = function(model) {
+  ratio = sum(residuals(model, type = "pearson")^2) / df.residual(model)
+  return(ratio)
+}
+overdispersion_check(model_age)
+overdispersion_check(model_sex)
+overdispersion_check(model_bmi)
+overdispersion_check(model_multi)
 ```
