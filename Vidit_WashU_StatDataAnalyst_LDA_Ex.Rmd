@@ -137,7 +137,7 @@ safe_min <- function(x) {
   min(x, na.rm = TRUE)
 }
 
-# 1. Initial cleaning (ALL visits → for Part B)
+# Initial cleaning (All visits : for Part B)
 table_data_B = full_data |>
   arrange(id, visit_date) |>
   mutate(
@@ -146,9 +146,13 @@ table_data_B = full_data |>
     (!is.na(avg_sbp) & avg_sbp >= 130) |
     (!is.na(avg_dbp) & avg_dbp >= 80)
     ),
-    htn_or_meds = as.integer(htn == 1 | meds == 1)) |>
+    htn_or_meds = as.integer(htn == 1 | meds == 1)
+  ) |>
   group_by(id) |>
-  mutate(visit_number = row_number()) |>
+  mutate(
+    visit_number = row_number(),
+    htn_cum = cumsum(htn_or_meds)   
+  ) |>
   ungroup()
 
 # Create clinic-only version (for Part A)
@@ -175,7 +179,7 @@ event_dates_A = table_data_A |>
     last_date = pmin(last_visit, exit_date, na.rm = TRUE),
 
     first_event_date = safe_min(visit_date[visit_number > 1 & htn_or_meds == 1]),
-    second_event_date = safe_min(visit_date[visit_number > 1 & cumsum(htn_or_meds == 1) >= 2])
+    second_event_date = safe_min(visit_date[visit_number > 1 & htn_cum >= 2])  
   ) |>
   mutate(
     py_A = as.numeric(pmin(first_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
@@ -222,7 +226,7 @@ event_dates_B = table_data_B |>
     last_date = pmin(last_visit, exit_date, na.rm = TRUE),
 
     first_event_date = safe_min(visit_date[visit_number > 1 & htn_or_meds == 1]),
-    second_event_date = safe_min(visit_date[visit_number > 1 & cumsum(htn_or_meds == 1) >= 2])
+    second_event_date = safe_min(visit_date[visit_number > 1 & htn_cum >= 2])  
   ) |>
   mutate(
     py_A = as.numeric(pmin(first_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
@@ -431,19 +435,19 @@ tab_sex = get_results(model_sex)
 tab_bmi = get_results(model_bmi)
 tab_multi = get_results(model_multi)
 
-tab_age %>%
+tab_age |>
   kable(digits = 3, caption = "Univariable Model: Age") |>
   kable_styling(full_width = FALSE)
 
-tab_sex %>%
+tab_sex |>
   kable(digits = 3, caption = "Univariable Model: Sex") |>
   kable_styling(full_width = FALSE)
 
-tab_bmi %>%
+tab_bmi |>
   kable(digits = 3, caption = "Univariable Model: BMI Categories") |>
   kable_styling(full_width = FALSE)
 
-tab_multi %>%
+tab_multi |>
   kable(digits = 3, caption = "Multivariable Model") |>
   kable_styling(full_width = FALSE)
 ```
