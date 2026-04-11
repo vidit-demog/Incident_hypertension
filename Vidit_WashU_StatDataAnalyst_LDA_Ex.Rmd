@@ -35,6 +35,12 @@ summary(outcome)
 view(base)
 view(vis)
 view(outcome)
+
+# Check if there are more than one exit dates
+check_exit = outcome |>
+  group_by(id) |>
+  summarise(n_exit = n_distinct(exit_date)) |>
+  count(n_exit)
 ```
 
 ```{R}
