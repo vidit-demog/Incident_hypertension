@@ -138,6 +138,35 @@ full_data = full_data |>
 # glyburide: antidiabetic medication (not antihypertensive)
 # warfarin (free text): anticoagulant (not antihypertensive)
 
+# Adding a false positive check (just a sanity check)
+no_med_check = full_data |>
+  filter(
+    a_med == 1,
+    if_all(
+      c(amlodipine, bisoprolol, captopril, carvedilol,
+        enalapril, furosemide, hctz, lisinopril,
+        losaratan, metoprolol),
+      ~ coalesce(.x, 0) == 0
+    ),
+    is.na(free_text_med) | free_text_med == ""
+  ) |>
+  head(10)
+
+# False negative check (should NOT be missed cases)
+med_missed_check = full_data |>
+  filter(
+    a_med == 0,
+    if_any(
+      c(amlodipine, bisoprolol, captopril, carvedilol,
+        enalapril, furosemide, hctz, lisinopril,
+        losaratan, metoprolol),
+      ~ coalesce(.x, 0) == 1
+    ) |
+    str_detect(coalesce(tolower(free_text_med), ""), 
+               "ramipril|olmesartan")
+  ) |>
+  head(10)
+
 summary(full_data)
 full_data <- full_data |>
   dplyr::select(
