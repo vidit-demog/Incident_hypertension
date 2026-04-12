@@ -180,7 +180,7 @@ full_data = full_data |>
     a_med,
     everything()
   ) |>
-  arrange(id)
+  arrange(stringr::str_rank(id, numeric = TRUE))
 
 write_csv(full_data, "files/full_data.csv")
 
