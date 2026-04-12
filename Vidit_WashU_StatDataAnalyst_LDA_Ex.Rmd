@@ -170,7 +170,7 @@ med_missed_check = full_data |>
   head(10)
 
 summary(full_data)
-full_data <- full_data |>
+full_data = full_data |>
   dplyr::select(
     id, age, male, height, weight, entry_date,
     visit_date, visit_type,
@@ -179,7 +179,8 @@ full_data <- full_data |>
     amlodipine:free_text_med,
     a_med,
     everything()
-  )
+  ) |>
+  arrange(id)
 
 write_csv(full_data, "files/full_data.csv")
 
