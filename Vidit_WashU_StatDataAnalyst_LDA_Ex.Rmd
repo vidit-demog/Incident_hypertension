@@ -385,6 +385,14 @@ make_table_kable(person_df_A, "event_A")
 make_table_kable(person_df_B, "event_B")
 ```
 
+Incidence rates of hypertension were estimated using person-years of follow-up. Hypertension was defined as SBP ≥130 mmHg, DBP ≥80 mmHg, or antihypertensive medication use.
+
+Part A defined incident hypertension as the first occurrence, while Part B used a stricter second-occurrence definition. Part A excluded home visits, whereas Part B included all visit types.
+
+Only participants free of hypertension at baseline were included. Rates were stratified by sex and age.
+
+Results: Incidence was higher in Part A (208.5 per 1000 PY) compared to Part B (103.8 per 1000 PY), reflecting the stricter outcome definition in Part B and differences in observed follow-up time due to inclusion of additional visit types. Age 18-29 had slightly smaller incidence rates compared to other age groups. The other groups were pretty similar in incidence rates. There was just a difference of approximately 1 incidence per 1000 PYs amongst males and females.
+
 ## Regression
 
 ```{R}
