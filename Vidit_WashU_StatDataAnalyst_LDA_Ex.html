@@ -579,156 +579,38 @@ display: none;
 </div>
 
 
-<div id="data-cleaning" class="section level2">
-<h2>Data Cleaning</h2>
 <pre class="r"><code># Libraries
-library(here)</code></pre>
-<pre><code>## here() starts at /Users/vidit/Incident_hypertension</code></pre>
-<pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-## ✔ dplyr     1.1.4     ✔ readr     2.1.6
-## ✔ forcats   1.0.1     ✔ stringr   1.6.0
-## ✔ ggplot2   4.0.1     ✔ tibble    3.3.0
-## ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
-## ✔ purrr     1.2.0</code></pre>
-<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-## ✖ dplyr::filter() masks stats::filter()
-## ✖ dplyr::lag()    masks stats::lag()
-## ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
-<pre class="r"><code>library(janitor)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;janitor&#39;
-## 
-## The following objects are masked from &#39;package:stats&#39;:
-## 
-##     chisq.test, fisher.test</code></pre>
-<pre class="r"><code>library(kableExtra)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;kableExtra&#39;
-## 
-## The following object is masked from &#39;package:dplyr&#39;:
-## 
-##     group_rows</code></pre>
+library(here)
+library(tidyverse)
+library(janitor)
+library(kableExtra)</code></pre>
+<div id="part-1-data-cleaning" class="section level2">
+<h2>Part 1: Data Cleaning</h2>
 <pre class="r"><code># Reading the datasets
 # Baseline Data
-base = read_csv(here(&quot;files&quot;, &quot;baseline_df.csv&quot;))</code></pre>
-<pre><code>## Rows: 4000 Columns: 5
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (2): sex, entry_date
-## dbl (3): id, age, height
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code># Visits Data
-vis = read_csv(here(&quot;files&quot;, &quot;visits_df.csv&quot;))</code></pre>
-<pre><code>## Rows: 28628 Columns: 26
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr  (3): visit_date, visit_type, free_text_med
-## dbl (23): id, sbp1, sbp2, sbp3, dbp1, dbp2, dbp3, weight, amlodipine, bisopr...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code># Exits and Death Data
-outcome = read_csv(here(&quot;files&quot;, &quot;outcomes_df.csv&quot;))</code></pre>
-<pre><code>## Rows: 800 Columns: 3
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (2): exit_date, exit_type
-## dbl (1): id
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code># Summary check for all datasets
-summary(base)</code></pre>
-<pre><code>##        id            age            sex                height     
-##  Min.   :   1   Min.   :18.00   Length:4000        Min.   :133.5  
-##  1st Qu.:1001   1st Qu.:44.00   Class :character   1st Qu.:161.3  
-##  Median :2000   Median :54.00   Mode  :character   Median :167.9  
-##  Mean   :2000   Mean   :53.74                      Mean   :167.9  
-##  3rd Qu.:3000   3rd Qu.:64.00                      3rd Qu.:174.8  
-##  Max.   :4000   Max.   :90.00                      Max.   :204.6  
-##   entry_date       
-##  Length:4000       
-##  Class :character  
-##  Mode  :character  
-##                    
-##                    
-## </code></pre>
-<pre class="r"><code>print(&quot;---&quot;)</code></pre>
-<pre><code>## [1] &quot;---&quot;</code></pre>
-<pre class="r"><code>summary(vis)</code></pre>
-<pre><code>##        id        visit_date         visit_type             sbp1      
-##  Min.   :   1   Length:28628       Length:28628       Min.   : -1.0  
-##  1st Qu.:1009   Class :character   Class :character   1st Qu.:106.0  
-##  Median :1976   Mode  :character   Mode  :character   Median :118.0  
-##  Mean   :1995                                         Mean   :126.4  
-##  3rd Qu.:2994                                         3rd Qu.:146.0  
-##  Max.   :4000                                         Max.   :400.0  
-##                                                       NA&#39;s   :5      
-##       sbp2            sbp3           dbp1             dbp2       
-##  Min.   :  1.0   Min.   :  1    Min.   :  1.00   Min.   :  1.00  
-##  1st Qu.:106.0   1st Qu.:106    1st Qu.: 62.00   1st Qu.: 62.00  
-##  Median :118.0   Median :118    Median : 71.00   Median : 71.00  
-##  Mean   :125.9   Mean   :126    Mean   : 75.75   Mean   : 75.85  
-##  3rd Qu.:146.0   3rd Qu.:146    3rd Qu.: 89.00   3rd Qu.: 89.00  
-##  Max.   :400.0   Max.   :399    Max.   :261.00   Max.   :260.00  
-##  NA&#39;s   :5       NA&#39;s   :1975   NA&#39;s   :5        NA&#39;s   :5       
-##       dbp3            weight         amlodipine       bisoprolol    
-##  Min.   :  1.00   Min.   : 28.80   Min.   :0.0000   Min.   :0.0000  
-##  1st Qu.: 62.00   1st Qu.: 68.70   1st Qu.:0.0000   1st Qu.:0.0000  
-##  Median : 71.00   Median : 78.70   Median :0.0000   Median :0.0000  
-##  Mean   : 75.51   Mean   : 78.98   Mean   :0.0459   Mean   :0.0458  
-##  3rd Qu.: 89.00   3rd Qu.: 89.40   3rd Qu.:0.0000   3rd Qu.:0.0000  
-##  Max.   :260.00   Max.   :126.90   Max.   :1.0000   Max.   :1.0000  
-##  NA&#39;s   :1975                      NA&#39;s   :11040    NA&#39;s   :11040   
-##    captopril        carvedilol       enalapril        furosemide    
-##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
-##  1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000  
-##  Median :0.0000   Median :0.0000   Median :0.0000   Median :0.0000  
-##  Mean   :0.0474   Mean   :0.0439   Mean   :0.0607   Mean   :0.0478  
-##  3rd Qu.:0.0000   3rd Qu.:0.0000   3rd Qu.:0.0000   3rd Qu.:0.0000  
-##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000  
-##  NA&#39;s   :11040    NA&#39;s   :11040    NA&#39;s   :11040    NA&#39;s   :11040   
-##       hctz          lisinopril      losaratan        metoprolol    
-##  Min.   :0.0000   Min.   :0.000   Min.   :0.0000   Min.   :0.0000  
-##  1st Qu.:0.0000   1st Qu.:0.000   1st Qu.:0.0000   1st Qu.:0.0000  
-##  Median :0.0000   Median :0.000   Median :0.0000   Median :0.0000  
-##  Mean   :0.0447   Mean   :0.045   Mean   :0.0455   Mean   :0.0463  
-##  3rd Qu.:0.0000   3rd Qu.:0.000   3rd Qu.:0.0000   3rd Qu.:0.0000  
-##  Max.   :1.0000   Max.   :1.000   Max.   :1.0000   Max.   :1.0000  
-##  NA&#39;s   :11040    NA&#39;s   :11040   NA&#39;s   :11040    NA&#39;s   :11040   
-##     aspirin        atorvastatin    simvastatin       metformin     
-##  Min.   :0.0000   Min.   :0.000   Min.   :0.0000   Min.   :0.0000  
-##  1st Qu.:0.0000   1st Qu.:0.000   1st Qu.:0.0000   1st Qu.:0.0000  
-##  Median :0.0000   Median :0.000   Median :0.0000   Median :0.0000  
-##  Mean   :0.3306   Mean   :0.262   Mean   :0.2664   Mean   :0.2576  
-##  3rd Qu.:1.0000   3rd Qu.:1.000   3rd Qu.:1.0000   3rd Qu.:1.0000  
-##  Max.   :1.0000   Max.   :1.000   Max.   :1.0000   Max.   :1.0000  
-##  NA&#39;s   :11040    NA&#39;s   :11040   NA&#39;s   :11040    NA&#39;s   :11040   
-##    glyburide      free_text_med     
-##  Min.   :0.0000   Length:28628      
-##  1st Qu.:0.0000   Class :character  
-##  Median :0.0000   Mode  :character  
-##  Mean   :0.3386                     
-##  3rd Qu.:1.0000                     
-##  Max.   :1.0000                     
-##  NA&#39;s   :11040</code></pre>
-<pre class="r"><code>print(&quot;---&quot;)</code></pre>
-<pre><code>## [1] &quot;---&quot;</code></pre>
-<pre class="r"><code>summary(outcome)</code></pre>
-<pre><code>##        id        exit_date          exit_type        
-##  Min.   :   8   Length:800         Length:800        
-##  1st Qu.:1064   Class :character   Class :character  
-##  Median :2078   Mode  :character   Mode  :character  
-##  Mean   :2049                                        
-##  3rd Qu.:3061                                        
-##  Max.   :4000</code></pre>
-<pre class="r"><code># View all of them
+base = read_csv(here(&quot;files&quot;, &quot;baseline_df.csv&quot;))
+# Visits Data
+vis = read_csv(here(&quot;files&quot;, &quot;visits_df.csv&quot;))
+# Exits and Death Data
+outcome = read_csv(here(&quot;files&quot;, &quot;outcomes_df.csv&quot;))
+
+# Summary check for all datasets
+# summary(base)
+# print(&quot;---&quot;)
+# summary(vis)
+# print(&quot;---&quot;)
+# summary(outcome)
+# I made all above summaries as comments as they are just raw data summaries
+# View all of them
 view(base)
 view(vis)
-view(outcome)</code></pre>
+view(outcome)
+
+# Check if there are more than one exit dates
+check_exit = outcome |&gt;
+  group_by(id) |&gt;
+  summarise(n_exit = n_distinct(exit_date)) |&gt;
+  count(n_exit)</code></pre>
 <pre class="r"><code># Data Cleaning, Manipulation and Merging
 # Ignoring NAs or missingnes for now
 # First cleaning base
@@ -838,7 +720,28 @@ summary(vis_clean)</code></pre>
 ##  3rd Qu.:1.0000                     
 ##  Max.   :1.0000                     
 ##  NA&#39;s   :11040</code></pre>
-<pre class="r"><code># Now cleaning outcome 
+<pre class="r"><code># Extract entry visit dates from visits
+entry_visits = vis_clean |&gt;
+  filter(visit_type == &quot;entry&quot;) |&gt;
+  select(id, visit_date) |&gt;
+  rename(entry_visit_date = visit_date)
+
+# Compare with baseline entry_date
+check_entry = base_clean |&gt;
+  select(id, entry_date) |&gt;
+  left_join(entry_visits, by = &quot;id&quot;) |&gt;
+  mutate(
+    match = entry_date == entry_visit_date
+  )
+
+# Summary of matches
+table(check_entry$match, useNA = &quot;ifany&quot;)</code></pre>
+<pre><code>## 
+## TRUE 
+## 4000</code></pre>
+<pre class="r"><code># Note: We only want to see TRUE- if there are any FALSE then it means some don&#39;t match.
+
+# Now cleaning outcome 
 outcome = outcome |&gt;
   mutate(exit_type = as.factor(exit_type))
 summary(outcome$exit_type)</code></pre>
@@ -857,9 +760,9 @@ summary(outcome_clean)</code></pre>
 ##                     3rd Qu.:2022-06-12                   
 ##                     Max.   :2026-12-12</code></pre>
 <pre class="r"><code># Joining the data!
-full_data = base_clean |&gt;
-  left_join(vis_clean, by = &quot;id&quot;) |&gt;
-  left_join(outcome_clean, by = &quot;id&quot;)
+full_data = vis_clean|&gt;
+  left_join(base_clean, by=&quot;id&quot;)|&gt;
+  left_join(outcome_clean, by=&quot;id&quot;)
 
 
 full_data = full_data |&gt;
@@ -870,222 +773,313 @@ full_data = full_data |&gt;
 
 full_data = full_data |&gt;
   mutate(
-    a_med = as.factor(as.integer(
+  a_med = as.integer(
       if_any(
         c(amlodipine, bisoprolol, captopril, carvedilol,
           enalapril, furosemide, hctz, lisinopril,
           losaratan, metoprolol),
-        ~ . == 1
-      )
-    ))
-  )
+        ~ coalesce(.x, 0) == 1
+      ) |
+      str_detect(coalesce(tolower(free_text_med), &quot;&quot;), &quot;ramipril|olmesartan&quot;)
+    )
+)
+# Medicines that were not considered for a_med :-
+# aspirin: antiplatelet (not antihypertensive)
+# atorvastatin: statin (lipid-lowering agent, not antihypertensive)
+# simvastatin: statin (lipid-lowering agent, not antihypertensive)
+# metformin: antidiabetic medication (not antihypertensive)
+# glyburide: antidiabetic medication (not antihypertensive)
+# warfarin (free text): anticoagulant (not antihypertensive)
+
+# Adding a false positive check (just a sanity check)
+no_med_check = full_data |&gt;
+  filter(
+    a_med == 1,
+    if_all(
+      c(amlodipine, bisoprolol, captopril, carvedilol,
+        enalapril, furosemide, hctz, lisinopril,
+        losaratan, metoprolol),
+      ~ coalesce(.x, 0) == 0
+    ),
+    is.na(free_text_med) | free_text_med == &quot;&quot;
+  ) |&gt;
+  head(10)
+
+# False negative check (should NOT be missed cases)
+med_missed_check = full_data |&gt;
+  filter(
+    a_med == 0,
+    if_any(
+      c(amlodipine, bisoprolol, captopril, carvedilol,
+        enalapril, furosemide, hctz, lisinopril,
+        losaratan, metoprolol),
+      ~ coalesce(.x, 0) == 1
+    ) |
+    str_detect(coalesce(tolower(free_text_med), &quot;&quot;), 
+               &quot;ramipril|olmesartan&quot;)
+  ) |&gt;
+  head(10)
+
 summary(full_data)</code></pre>
-<pre><code>##       id                 age            height        entry_date        
-##  Length:28628       Min.   :18.00   Min.   :133.5   Min.   :2013-01-01  
-##  Class :character   1st Qu.:44.00   1st Qu.:161.1   1st Qu.:2014-03-23  
-##  Mode  :character   Median :54.00   Median :167.9   Median :2015-07-22  
-##                     Mean   :53.77   Mean   :167.9   Mean   :2015-07-06  
-##                     3rd Qu.:64.00   3rd Qu.:174.8   3rd Qu.:2016-09-22  
-##                     Max.   :90.00   Max.   :204.6   Max.   :2017-12-31  
-##                                                                         
-##  male        visit_date              visit_type        sbp1            sbp2    
-##  0:13948   Min.   :2013-01-01   home      :6165   Min.   : 79.0   Min.   : 81  
-##  1:14680   1st Qu.:2016-05-01   unofficial:4875   1st Qu.:106.0   1st Qu.:106  
-##            Median :2017-12-24   entry     :4000   Median :118.0   Median :118  
-##            Mean   :2018-02-10   m12       :2819   Mean   :127.4   Mean   :127  
-##            3rd Qu.:2019-11-04   m24       :2779   3rd Qu.:146.0   3rd Qu.:146  
-##            Max.   :2024-12-13   m36       :2578   Max.   :400.0   Max.   :400  
-##                                 (Other)   :5412   NA&#39;s   :272     NA&#39;s   :310  
-##       sbp3            dbp1             dbp2             dbp3       
-##  Min.   : 80.0   Min.   : 42.00   Min.   : 41.00   Min.   : 41.00  
-##  1st Qu.:106.0   1st Qu.: 62.00   1st Qu.: 62.00   1st Qu.: 62.00  
-##  Median :118.0   Median : 71.00   Median : 71.00   Median : 71.00  
-##  Mean   :127.1   Mean   : 76.36   Mean   : 76.45   Mean   : 76.14  
-##  3rd Qu.:146.0   3rd Qu.: 89.00   3rd Qu.: 89.00   3rd Qu.: 89.00  
-##  Max.   :399.0   Max.   :261.00   Max.   :260.00   Max.   :260.00  
-##  NA&#39;s   :2250    NA&#39;s   :287      NA&#39;s   :284      NA&#39;s   :2248    
-##      weight         amlodipine       bisoprolol       captopril     
-##  Min.   : 28.80   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
-##  1st Qu.: 68.70   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000  
-##  Median : 78.70   Median :0.0000   Median :0.0000   Median :0.0000  
-##  Mean   : 78.98   Mean   :0.0459   Mean   :0.0458   Mean   :0.0474  
-##  3rd Qu.: 89.40   3rd Qu.:0.0000   3rd Qu.:0.0000   3rd Qu.:0.0000  
-##  Max.   :126.90   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000  
-##                   NA&#39;s   :11040    NA&#39;s   :11040    NA&#39;s   :11040   
-##    carvedilol       enalapril        furosemide          hctz       
+<pre><code>##       id              visit_date              visit_type        sbp1      
+##  Length:28628       Min.   :2013-01-01   home      :6165   Min.   : 79.0  
+##  Class :character   1st Qu.:2016-05-01   unofficial:4875   1st Qu.:106.0  
+##  Mode  :character   Median :2017-12-24   entry     :4000   Median :118.0  
+##                     Mean   :2018-02-10   m12       :2819   Mean   :127.4  
+##                     3rd Qu.:2019-11-04   m24       :2779   3rd Qu.:146.0  
+##                     Max.   :2024-12-13   m36       :2578   Max.   :400.0  
+##                                          (Other)   :5412   NA&#39;s   :272    
+##       sbp2          sbp3            dbp1             dbp2       
+##  Min.   : 81   Min.   : 80.0   Min.   : 42.00   Min.   : 41.00  
+##  1st Qu.:106   1st Qu.:106.0   1st Qu.: 62.00   1st Qu.: 62.00  
+##  Median :118   Median :118.0   Median : 71.00   Median : 71.00  
+##  Mean   :127   Mean   :127.1   Mean   : 76.36   Mean   : 76.45  
+##  3rd Qu.:146   3rd Qu.:146.0   3rd Qu.: 89.00   3rd Qu.: 89.00  
+##  Max.   :400   Max.   :399.0   Max.   :261.00   Max.   :260.00  
+##  NA&#39;s   :310   NA&#39;s   :2250    NA&#39;s   :287      NA&#39;s   :284     
+##       dbp3            weight         amlodipine       bisoprolol    
+##  Min.   : 41.00   Min.   : 28.80   Min.   :0.0000   Min.   :0.0000  
+##  1st Qu.: 62.00   1st Qu.: 68.70   1st Qu.:0.0000   1st Qu.:0.0000  
+##  Median : 71.00   Median : 78.70   Median :0.0000   Median :0.0000  
+##  Mean   : 76.14   Mean   : 78.98   Mean   :0.0459   Mean   :0.0458  
+##  3rd Qu.: 89.00   3rd Qu.: 89.40   3rd Qu.:0.0000   3rd Qu.:0.0000  
+##  Max.   :260.00   Max.   :126.90   Max.   :1.0000   Max.   :1.0000  
+##  NA&#39;s   :2248                      NA&#39;s   :11040    NA&#39;s   :11040   
+##    captopril        carvedilol       enalapril        furosemide    
 ##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
 ##  1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000  
 ##  Median :0.0000   Median :0.0000   Median :0.0000   Median :0.0000  
-##  Mean   :0.0439   Mean   :0.0607   Mean   :0.0478   Mean   :0.0447  
+##  Mean   :0.0474   Mean   :0.0439   Mean   :0.0607   Mean   :0.0478  
 ##  3rd Qu.:0.0000   3rd Qu.:0.0000   3rd Qu.:0.0000   3rd Qu.:0.0000  
 ##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000  
 ##  NA&#39;s   :11040    NA&#39;s   :11040    NA&#39;s   :11040    NA&#39;s   :11040   
-##    lisinopril      losaratan        metoprolol        aspirin      
-##  Min.   :0.000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
-##  1st Qu.:0.000   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000  
-##  Median :0.000   Median :0.0000   Median :0.0000   Median :0.0000  
-##  Mean   :0.045   Mean   :0.0455   Mean   :0.0463   Mean   :0.3306  
-##  3rd Qu.:0.000   3rd Qu.:0.0000   3rd Qu.:0.0000   3rd Qu.:1.0000  
-##  Max.   :1.000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000  
-##  NA&#39;s   :11040   NA&#39;s   :11040    NA&#39;s   :11040    NA&#39;s   :11040   
-##   atorvastatin    simvastatin       metformin        glyburide     
-##  Min.   :0.000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
-##  1st Qu.:0.000   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000  
-##  Median :0.000   Median :0.0000   Median :0.0000   Median :0.0000  
-##  Mean   :0.262   Mean   :0.2664   Mean   :0.2576   Mean   :0.3386  
-##  3rd Qu.:1.000   3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:1.0000  
-##  Max.   :1.000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000  
-##  NA&#39;s   :11040   NA&#39;s   :11040    NA&#39;s   :11040    NA&#39;s   :11040   
-##  free_text_med        exit_date               exit_type        avg_sbp     
-##  Length:28628       Min.   :2013-08-31   death     : 4971   Min.   : 82.0  
-##  Class :character   1st Qu.:2019-09-15   study_exit:  705   1st Qu.:106.0  
-##  Mode  :character   Median :2021-04-09   NA&#39;s      :22952   Median :118.0  
-##                     Mean   :2021-02-09                      Mean   :127.1  
-##                     3rd Qu.:2022-08-12                      3rd Qu.:146.5  
-##                     Max.   :2026-12-12                      Max.   :398.0  
-##                     NA&#39;s   :22952                           NA&#39;s   :32     
-##     avg_dbp       a_med      
-##  Min.   : 45.0   0   :12991  
-##  1st Qu.: 62.5   1   : 4597  
-##  Median : 70.5   NA&#39;s:11040  
-##  Mean   : 76.3               
-##  3rd Qu.: 89.0               
-##  Max.   :249.0               
-##  NA&#39;s   :24</code></pre>
-<pre class="r"><code>write_csv(full_data, &quot;files/full_data.csv&quot;)</code></pre>
-<pre class="r"><code>head(full_data, 20)</code></pre>
-<pre><code>## # A tibble: 20 × 35
-##    id      age height entry_date male  visit_date visit_type  sbp1  sbp2  sbp3
-##    &lt;chr&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;date&gt;     &lt;fct&gt; &lt;date&gt;     &lt;fct&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-##  1 1        75   180. 2016-07-24 1     2016-07-24 entry        158   161   167
-##  2 1        75   180. 2016-07-24 1     2017-08-24 home         166   168   166
-##  3 1        75   180. 2016-07-24 1     2019-01-23 m36          135   137   137
-##  4 1        75   180. 2016-07-24 1     2019-04-25 m36          132   141   131
-##  5 1        75   180. 2016-07-24 1     2020-04-24 m48          168   166   371
-##  6 1        75   180. 2016-07-24 1     2021-04-24 m60          147   160   163
-##  7 1        75   180. 2016-07-24 1     2020-02-23 unofficial   131   145   140
-##  8 2        46   166. 2013-02-18 1     2013-02-18 entry        101   107   113
-##  9 2        46   166. 2013-02-18 1     2013-11-19 m12          116   117   121
-## 10 2        46   166. 2013-02-18 1     2014-07-20 m12          117    NA   116
-## 11 2        46   166. 2013-02-18 1     2016-03-20 m36           93    91   107
-## 12 2        46   166. 2013-02-18 1     2017-06-20 m48          110    99   101
-## 13 2        46   166. 2013-02-18 1     2019-09-20 m72          100   105   109
-## 14 2        46   166. 2013-02-18 1     2013-06-20 unofficial   107   105   112
-## 15 2        46   166. 2013-02-18 1     2015-08-20 unofficial   117   113   118
-## 16 3        59   165. 2017-07-08 0     2017-07-08 entry        161   161   161
-## 17 3        59   165. 2017-07-08 0     2018-09-07 home         150   154    NA
-## 18 3        59   165. 2017-07-08 0     2018-02-06 unofficial   157   163   156
-## 19 3        59   165. 2017-07-08 0     2019-09-07 unofficial   139   143   129
-## 20 4        63   164  2017-12-20 1     2017-12-20 entry        141   139   140
-## # ℹ 25 more variables: dbp1 &lt;dbl&gt;, dbp2 &lt;dbl&gt;, dbp3 &lt;dbl&gt;, weight &lt;dbl&gt;,
-## #   amlodipine &lt;dbl&gt;, bisoprolol &lt;dbl&gt;, captopril &lt;dbl&gt;, carvedilol &lt;dbl&gt;,
-## #   enalapril &lt;dbl&gt;, furosemide &lt;dbl&gt;, hctz &lt;dbl&gt;, lisinopril &lt;dbl&gt;,
-## #   losaratan &lt;dbl&gt;, metoprolol &lt;dbl&gt;, aspirin &lt;dbl&gt;, atorvastatin &lt;dbl&gt;,
-## #   simvastatin &lt;dbl&gt;, metformin &lt;dbl&gt;, glyburide &lt;dbl&gt;, free_text_med &lt;chr&gt;,
-## #   exit_date &lt;date&gt;, exit_type &lt;fct&gt;, avg_sbp &lt;dbl&gt;, avg_dbp &lt;dbl&gt;,
-## #   a_med &lt;fct&gt;</code></pre>
-</div>
-<div id="incident-hypertension" class="section level2">
-<h2>Incident Hypertension</h2>
-<pre class="r"><code># Copy data so original is not changed
-table_data = full_data
-
-# Sort by id and visit date
-table_data = table_data %&gt;% arrange(id, visit_date)
-
-# Create average BP per visit
-table_data = table_data %&gt;%
-  mutate(
-    sbp = rowMeans(cbind(sbp1, sbp2, sbp3), na.rm = TRUE),
-    dbp = rowMeans(cbind(dbp1, dbp2, dbp3), na.rm = TRUE)
+##       hctz          lisinopril      losaratan        metoprolol    
+##  Min.   :0.0000   Min.   :0.000   Min.   :0.0000   Min.   :0.0000  
+##  1st Qu.:0.0000   1st Qu.:0.000   1st Qu.:0.0000   1st Qu.:0.0000  
+##  Median :0.0000   Median :0.000   Median :0.0000   Median :0.0000  
+##  Mean   :0.0447   Mean   :0.045   Mean   :0.0455   Mean   :0.0463  
+##  3rd Qu.:0.0000   3rd Qu.:0.000   3rd Qu.:0.0000   3rd Qu.:0.0000  
+##  Max.   :1.0000   Max.   :1.000   Max.   :1.0000   Max.   :1.0000  
+##  NA&#39;s   :11040    NA&#39;s   :11040   NA&#39;s   :11040    NA&#39;s   :11040   
+##     aspirin        atorvastatin    simvastatin       metformin     
+##  Min.   :0.0000   Min.   :0.000   Min.   :0.0000   Min.   :0.0000  
+##  1st Qu.:0.0000   1st Qu.:0.000   1st Qu.:0.0000   1st Qu.:0.0000  
+##  Median :0.0000   Median :0.000   Median :0.0000   Median :0.0000  
+##  Mean   :0.3306   Mean   :0.262   Mean   :0.2664   Mean   :0.2576  
+##  3rd Qu.:1.0000   3rd Qu.:1.000   3rd Qu.:1.0000   3rd Qu.:1.0000  
+##  Max.   :1.0000   Max.   :1.000   Max.   :1.0000   Max.   :1.0000  
+##  NA&#39;s   :11040    NA&#39;s   :11040   NA&#39;s   :11040    NA&#39;s   :11040   
+##    glyburide      free_text_med           age            height     
+##  Min.   :0.0000   Length:28628       Min.   :18.00   Min.   :133.5  
+##  1st Qu.:0.0000   Class :character   1st Qu.:44.00   1st Qu.:161.1  
+##  Median :0.0000   Mode  :character   Median :54.00   Median :167.9  
+##  Mean   :0.3386                      Mean   :53.77   Mean   :167.9  
+##  3rd Qu.:1.0000                      3rd Qu.:64.00   3rd Qu.:174.8  
+##  Max.   :1.0000                      Max.   :90.00   Max.   :204.6  
+##  NA&#39;s   :11040                                                      
+##    entry_date         male        exit_date               exit_type    
+##  Min.   :2013-01-01   0:13948   Min.   :2013-08-31   death     : 4971  
+##  1st Qu.:2014-03-23   1:14680   1st Qu.:2019-09-15   study_exit:  705  
+##  Median :2015-07-22             Median :2021-04-09   NA&#39;s      :22952  
+##  Mean   :2015-07-06             Mean   :2021-02-09                     
+##  3rd Qu.:2016-09-22             3rd Qu.:2022-08-12                     
+##  Max.   :2017-12-31             Max.   :2026-12-12                     
+##                                 NA&#39;s   :22952                          
+##     avg_sbp         avg_dbp          a_med       
+##  Min.   : 82.0   Min.   : 45.0   Min.   :0.0000  
+##  1st Qu.:106.0   1st Qu.: 62.5   1st Qu.:0.0000  
+##  Median :118.0   Median : 70.5   Median :0.0000  
+##  Mean   :127.1   Mean   : 76.3   Mean   :0.2498  
+##  3rd Qu.:146.5   3rd Qu.: 89.0   3rd Qu.:0.0000  
+##  Max.   :398.0   Max.   :249.0   Max.   :1.0000  
+##  NA&#39;s   :32      NA&#39;s   :24</code></pre>
+<pre class="r"><code>full_data &lt;- full_data |&gt;
+  dplyr::select(
+    id, age, male, height, weight, entry_date,
+    visit_date, visit_type,
+    sbp1, sbp2, sbp3, avg_sbp,
+    dbp1, dbp2, dbp3, avg_dbp,
+    amlodipine:free_text_med,
+    a_med,
+    everything()
   )
 
-# Create medication indicator
-table_data = table_data %&gt;% mutate(meds = a_med)
+write_csv(full_data, &quot;files/full_data.csv&quot;)
 
-# Define hypertension (NA preserved if BP missing)
-table_data = table_data %&gt;%
-  mutate(htn = ifelse(!is.na(sbp) &amp; !is.na(dbp), as.integer(sbp &gt;= 130 | dbp &gt;= 80), NA_integer_))
+summary(as.factor(full_data$free_text_med))</code></pre>
+<pre><code>## olmesartan   ramipril   warfarin       NA&#39;s 
+##       1720       1747       1745      23416</code></pre>
+<pre class="r"><code># Apart from warfarin rest are drugs blood pressure drugs
+# Note: I read warfarin is a blood thinner so not counting it</code></pre>
+<pre class="r"><code>head(full_data, 20)</code></pre>
+<pre><code>## # A tibble: 20 × 35
+##    id      age male  height weight entry_date visit_date visit_type  sbp1  sbp2
+##    &lt;chr&gt; &lt;dbl&gt; &lt;fct&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;date&gt;     &lt;date&gt;     &lt;fct&gt;      &lt;dbl&gt; &lt;dbl&gt;
+##  1 75       61 0       187    79.6 2016-04-25 2016-04-25 entry        102   111
+##  2 148      31 1       163.   56.8 2015-05-14 2015-05-14 entry        382   120
+##  3 163      39 0       161.   70   2014-08-28 2014-08-28 entry        151   142
+##  4 200      85 1       172    80.6 2016-07-13 2016-07-13 entry        114   117
+##  5 231      50 0       159.   98   2017-09-02 2017-09-02 entry         92   391
+##  6 277      29 0       174.   76.6 2013-07-16 2013-07-16 entry        119   107
+##  7 366      55 0       153.   87.5 2016-02-07 2016-02-07 entry         NA   115
+##  8 400      39 1       154.   67.8 2017-03-04 2017-03-04 entry        106   114
+##  9 437      75 0       168    54.1 2013-11-30 2013-11-30 entry        114   110
+## 10 503      71 1       194.   60.9 2017-08-02 2017-08-02 entry        165   169
+## 11 523      37 1       186.   82.3 2017-07-25 2017-07-25 entry        105   105
+## 12 570      53 1       167.   86.2 2016-05-01 2016-05-01 entry        100   102
+## 13 572      55 1       172.   96.5 2014-12-19 2014-12-19 entry        166   163
+## 14 580      51 1       167.   85.6 2014-04-06 2014-04-06 entry        102   104
+## 15 584      63 1       161.   59.1 2013-07-13 2013-07-13 entry        109   102
+## 16 617      63 0       161.   74.6 2016-05-17 2016-05-17 entry        108   113
+## 17 655      77 0       174    65.4 2014-07-10 2014-07-10 entry        109   115
+## 18 657      70 0       165.   60.4 2017-11-27 2017-11-27 entry        115   108
+## 19 663      51 0       189.   59.6 2013-08-12 2013-08-12 entry        117   114
+## 20 667      35 0       143.   82   2017-03-13 2017-03-13 entry        136   133
+## # ℹ 25 more variables: sbp3 &lt;dbl&gt;, avg_sbp &lt;dbl&gt;, dbp1 &lt;dbl&gt;, dbp2 &lt;dbl&gt;,
+## #   dbp3 &lt;dbl&gt;, avg_dbp &lt;dbl&gt;, amlodipine &lt;dbl&gt;, bisoprolol &lt;dbl&gt;,
+## #   captopril &lt;dbl&gt;, carvedilol &lt;dbl&gt;, enalapril &lt;dbl&gt;, furosemide &lt;dbl&gt;,
+## #   hctz &lt;dbl&gt;, lisinopril &lt;dbl&gt;, losaratan &lt;dbl&gt;, metoprolol &lt;dbl&gt;,
+## #   aspirin &lt;dbl&gt;, atorvastatin &lt;dbl&gt;, simvastatin &lt;dbl&gt;, metformin &lt;dbl&gt;,
+## #   glyburide &lt;dbl&gt;, free_text_med &lt;chr&gt;, a_med &lt;int&gt;, exit_date &lt;date&gt;,
+## #   exit_type &lt;fct&gt;</code></pre>
+</div>
+<div id="part-2-incident-hypertension" class="section level2">
+<h2>Part 2: Incident Hypertension</h2>
+<pre class="r"><code># Helper function
+safe_min &lt;- function(x) {
+  if (length(x) == 0 || all(is.na(x))) return(as.Date(NA))
+  min(x, na.rm = TRUE)
+}
 
-# Keep ids with entry visit
-baseline = table_data %&gt;% filter(tolower(visit_type) == &quot;entry&quot;)
-ids = unique(baseline$id)
-table_data = table_data %&gt;% filter(id %in% ids)
-
-# Order again and define visit number
-table_data = table_data %&gt;% 
-  arrange(id, visit_date) %&gt;%
-  group_by(id) %&gt;%
-  mutate(visit_number = row_number()) %&gt;%
-  ungroup()
-
-# Baseline row
-baseline = table_data %&gt;% filter(visit_number == 1)
-
-# Disease free at baseline (only htn=0 &amp; meds=0)
-baseline_df = baseline %&gt;% filter(htn == 0 &amp; meds == 0)
-
-# Keep only disease free
-table_data = table_data %&gt;% filter(id %in% baseline_df$id)
-
-# Event part A: incident hypertension or medication use (NA-safe)
-table_data = table_data %&gt;%
-  group_by(id) %&gt;%
+# Initial cleaning (All visits : for Part B)
+table_data_B = full_data |&gt;
+  arrange(id, visit_date) |&gt;
   mutate(
-    event_A = as.integer(
-      any(visit_number == 1 &amp; (htn == 1 | meds == 1), na.rm = TRUE)
-    )
-  ) %&gt;%
-  ungroup()
-
-# Event part B: two visits with hypertension (NA-safe)
-table_data = table_data %&gt;%
-  group_by(id) %&gt;%
+    meds = a_med,
+    htn = as.integer(
+    (!is.na(avg_sbp) &amp; avg_sbp &gt;= 130) |
+    (!is.na(avg_dbp) &amp; avg_dbp &gt;= 80)
+    ),
+    htn_or_meds = as.integer(htn == 1 | meds == 1)
+  ) |&gt;
+  group_by(id) |&gt;
   mutate(
-    event_B = as.integer(
-      any(visit_number == 2 &amp; (htn == 1 | meds == 1), na.rm = TRUE)
-    )
-  ) %&gt;%
+    visit_number = row_number(),
+    htn_cum = cumsum(htn_or_meds)   
+  ) |&gt;
   ungroup()
 
-# Person-years
-entry_dates = table_data %&gt;% group_by(id) %&gt;% summarise(entry = min(visit_date))
-last_dates = table_data %&gt;% group_by(id) %&gt;% summarise(last = max(visit_date))
-py_df = entry_dates %&gt;% inner_join(last_dates, by = &quot;id&quot;) %&gt;%
-  mutate(py = as.numeric(last - entry) / 365)
+# Create clinic-only version (for Part A)
+table_data_A = table_data_B |&gt;
+  filter(visit_type != &quot;home&quot;)
 
-# Unique person-level data
-person_df = table_data %&gt;%
-  group_by(id) %&gt;%
+# Keep only those who were disease-free at visit 1
+baseline_df_ids_A = table_data_A |&gt;
+  filter(visit_number == 1, htn == 0, meds == 0) |&gt;
+  pull(id)
+
+table_data_A = table_data_A |&gt;
+  filter(id %in% baseline_df_ids_A)
+
+# Calculate dates and Person-Years 
+event_dates_A = table_data_A |&gt;
+  arrange(id, visit_date) |&gt;
+  group_by(id) |&gt;
   summarise(
-    event_A = first(event_A),
-    event_B = first(event_B),
+    entry_date = min(visit_date),
+    last_visit = max(visit_date),
+    exit_date = unique(exit_date),
+    
+    last_date = pmin(last_visit, exit_date, na.rm = TRUE),
+
+    first_event_date = safe_min(visit_date[visit_number &gt; 1 &amp; htn_or_meds == 1]),
+    second_event_date = safe_min(visit_date[visit_number &gt; 1 &amp; htn_cum &gt;= 2])  
+  ) |&gt;
+  mutate(
+    py_A = as.numeric(pmin(first_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
+    py_B = as.numeric(pmin(second_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
+    event_A = as.integer(!is.na(first_event_date)),
+    event_B = as.integer(!is.na(second_event_date))
+  )
+
+# Final person-level dataset (Part A)
+person_df_A = table_data_A |&gt;
+  group_by(id) |&gt;
+  summarise(
     male = first(male),
     age = first(age)
-  ) %&gt;%
-  left_join(py_df %&gt;% select(id, py), by = &quot;id&quot;) %&gt;%
-  ungroup()
+  ) |&gt;
+  inner_join(event_dates_A, by = &quot;id&quot;) |&gt;
+  mutate(
+    age_group = case_when(
+      age &lt; 30 ~ &quot;18-29 years&quot;,
+      age &lt; 40 ~ &quot;30-39 years&quot;,
+      age &lt; 50 ~ &quot;40-49 years&quot;,
+      age &lt; 60 ~ &quot;50-59 years&quot;,
+      TRUE ~ &quot;60+ years&quot;
+    )
+  )
 
-# Age groups
-person_df = person_df %&gt;%
-  mutate(age_group = case_when(
-    age &lt; 30 ~ &quot;18-29 years&quot;,
-    age &lt; 40 ~ &quot;30-39 years&quot;,
-    age &lt; 50 ~ &quot;40-49 years&quot;,
-    age &lt; 60 ~ &quot;50-59 years&quot;,
-    TRUE ~ &quot;60+ years&quot;
-  ))</code></pre>
-<pre class="r"><code>make_table_kable &lt;- function(df, event_var) {
+# Keep only those who were disease-free at visit 1
+baseline_df_ids_B = table_data_B |&gt;
+  filter(visit_number == 1, htn == 0, meds == 0) |&gt;
+  pull(id)
+
+table_data_B = table_data_B |&gt;
+  filter(id %in% baseline_df_ids_B)
+
+# Calculate dates and Person-Years 
+event_dates_B = table_data_B |&gt;
+  arrange(id, visit_date) |&gt;
+  group_by(id) |&gt;
+  summarise(
+    entry_date = min(visit_date),
+    last_visit = max(visit_date),
+    exit_date = unique(exit_date),
+    
+    last_date = pmin(last_visit, exit_date, na.rm = TRUE),
+
+    first_event_date = safe_min(visit_date[visit_number &gt; 1 &amp; htn_or_meds == 1]),
+    second_event_date = safe_min(visit_date[visit_number &gt; 1 &amp; htn_cum &gt;= 2])  
+  ) |&gt;
+  mutate(
+    py_A = as.numeric(pmin(first_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
+    py_B = as.numeric(pmin(second_event_date, last_date, na.rm = TRUE) - entry_date) / 365.25,
+    event_A = as.integer(!is.na(first_event_date)),
+    event_B = as.integer(!is.na(second_event_date))
+  )
+
+# Final person-level dataset (Part B)
+person_df_B = table_data_B |&gt;
+  group_by(id) |&gt;
+  summarise(
+    male = first(male),
+    age = first(age)
+  ) |&gt;
+  inner_join(event_dates_B, by = &quot;id&quot;) |&gt;
+  mutate(
+    age_group = case_when(
+      age &lt; 30 ~ &quot;18-29 years&quot;,
+      age &lt; 40 ~ &quot;30-39 years&quot;,
+      age &lt; 50 ~ &quot;40-49 years&quot;,
+      age &lt; 60 ~ &quot;50-59 years&quot;,
+      TRUE ~ &quot;60+ years&quot;
+    )
+  )</code></pre>
+<pre class="r"><code>make_table_kable = function(df, event_var) {
   
-  table_rows &lt;- list()
+  # Which PY column to use?
+  py_col = ifelse(event_var == &quot;event_A&quot;, &quot;py_A&quot;, &quot;py_B&quot;)
+  
+  table_rows = list()
   
   # Total row
-  n_total &lt;- nrow(df)
-  e_total &lt;- sum(df[[event_var]], na.rm = TRUE)
-  py_total &lt;- sum(df$py, na.rm = TRUE)
-  inc_total &lt;- ifelse(py_total &gt; 0, (e_total / py_total) * 1000, NA)
+  n_total = nrow(df)
+  e_total = sum(df[[event_var]], na.rm = TRUE)
+  py_total = sum(df[[py_col]], na.rm = TRUE)
+  inc_total = ifelse(py_total &gt; 0, (e_total / py_total) * 1000, NA)
   
-  table_rows[[1]] &lt;- data.frame(
+  table_rows[[1]] = data.frame(
     Category = &quot;**Total**&quot;,
     `Disease Free (n)` = n_total,
     `Events (n)` = e_total,
@@ -1095,7 +1089,7 @@ person_df = person_df %&gt;%
   )
   
   # Sex header row
-  table_rows[[2]] &lt;- data.frame(
+  table_rows[[2]] = data.frame(
     Category = &quot;**Sex**&quot;,
     `Disease Free (n)` = &quot;&quot;,
     `Events (n)` = &quot;&quot;,
@@ -1107,7 +1101,7 @@ person_df = person_df %&gt;%
   # Sex sub-rows
   for (sex in c(1,0)) {
     sub &lt;- df[df$male == sex, ]
-    py_sub &lt;- sum(sub$py, na.rm = TRUE)
+    py_sub &lt;- sum(sub[[py_col]], na.rm = TRUE)
     inc_sub &lt;- ifelse(py_sub &gt; 0, (sum(sub[[event_var]], na.rm = TRUE) / py_sub) * 1000, NA)
     table_rows[[length(table_rows)+1]] &lt;- data.frame(
       Category = ifelse(sex == 1, &quot;Male&quot;, &quot;Female&quot;),
@@ -1120,7 +1114,7 @@ person_df = person_df %&gt;%
   }
   
   # Age group header row
-  table_rows[[length(table_rows)+1]] &lt;- data.frame(
+  table_rows[[length(table_rows)+1]] = data.frame(
     Category = &quot;**Age group**&quot;,
     `Disease Free (n)` = &quot;&quot;,
     `Events (n)` = &quot;&quot;,
@@ -1134,7 +1128,7 @@ person_df = person_df %&gt;%
   for (g in groups) {
     sub &lt;- df[df$age_group == g, ]
     if (nrow(sub) &gt; 0) {
-      py_sub &lt;- sum(sub$py, na.rm = TRUE)
+      py_sub &lt;- sum(sub[[py_col]], na.rm = TRUE)
       inc_sub &lt;- ifelse(py_sub &gt; 0, (sum(sub[[event_var]], na.rm = TRUE) / py_sub) * 1000, NA)
       table_rows[[length(table_rows)+1]] &lt;- data.frame(
         Category = g,
@@ -1148,10 +1142,10 @@ person_df = person_df %&gt;%
   }
   
   # Bind all rows
-  out_table &lt;- do.call(rbind, table_rows)
+  out_table = do.call(rbind, table_rows)
   
   # Column names
-  colnames(out_table) &lt;- c(&quot;Category&quot;,&quot;Disease Free (n)&quot;,&quot;Events (n)&quot;,&quot;Person-Years&quot;,&quot;Incidence per 1000 PYs&quot;)
+  colnames(out_table) = c(&quot;Category&quot;,&quot;Disease Free (n)&quot;,&quot;Events (n)&quot;,&quot;Person-Years&quot;,&quot;Incidence per 1000 PYs&quot;)
   
   out_table %&gt;%
     kbl(caption = paste0(&quot;Incident Hypertension - &quot;, event_var),
@@ -1162,7 +1156,7 @@ person_df = person_df %&gt;%
 }
 
 # Part A table
-make_table_kable(person_df, &quot;event_A&quot;)</code></pre>
+make_table_kable(person_df_A, &quot;event_A&quot;)</code></pre>
 <table class="table table-striped table-hover" style="width: auto !important; ">
 <caption>
 Incident Hypertension - event_A
@@ -1192,16 +1186,16 @@ Incidence per 1000 PYs
 <strong>Total</strong>
 </td>
 <td style="text-align:right;">
-2608
+2112
 </td>
 <td style="text-align:right;">
-0
+1290
 </td>
 <td style="text-align:right;">
-12293.37
+6187.55
 </td>
 <td style="text-align:right;">
-0
+208.48
 </td>
 </tr>
 <tr>
@@ -1222,16 +1216,16 @@ Incidence per 1000 PYs
 Male
 </td>
 <td style="text-align:right;">
-1352
+1089
 </td>
 <td style="text-align:right;">
-0
+663
 </td>
 <td style="text-align:right;">
-6430.33
+3199.73
 </td>
 <td style="text-align:right;">
-0
+207.21
 </td>
 </tr>
 <tr>
@@ -1239,16 +1233,16 @@ Male
 Female
 </td>
 <td style="text-align:right;">
-1256
+1023
 </td>
 <td style="text-align:right;">
-0
+627
 </td>
 <td style="text-align:right;">
-5863.03
+2987.82
 </td>
 <td style="text-align:right;">
-0
+209.85
 </td>
 </tr>
 <tr>
@@ -1269,16 +1263,16 @@ Female
 18-29 years
 </td>
 <td style="text-align:right;">
-129
+107
 </td>
 <td style="text-align:right;">
-0
+68
 </td>
 <td style="text-align:right;">
-634.82
+313.28
 </td>
 <td style="text-align:right;">
-0
+217.06
 </td>
 </tr>
 <tr>
@@ -1286,16 +1280,16 @@ Female
 30-39 years
 </td>
 <td style="text-align:right;">
-316
+249
 </td>
 <td style="text-align:right;">
-0
+161
 </td>
 <td style="text-align:right;">
-1491.22
+747.63
 </td>
 <td style="text-align:right;">
-0
+215.35
 </td>
 </tr>
 <tr>
@@ -1303,16 +1297,16 @@ Female
 40-49 years
 </td>
 <td style="text-align:right;">
-554
+441
 </td>
 <td style="text-align:right;">
-0
+259
 </td>
 <td style="text-align:right;">
-2592.26
+1272.85
 </td>
 <td style="text-align:right;">
-0
+203.48
 </td>
 </tr>
 <tr>
@@ -1320,16 +1314,16 @@ Female
 50-59 years
 </td>
 <td style="text-align:right;">
-715
+582
 </td>
 <td style="text-align:right;">
-0
+356
 </td>
 <td style="text-align:right;">
-3315.73
+1715.1
 </td>
 <td style="text-align:right;">
-0
+207.57
 </td>
 </tr>
 <tr>
@@ -1337,22 +1331,22 @@ Female
 60+ years
 </td>
 <td style="text-align:right;">
-894
+733
 </td>
 <td style="text-align:right;">
-0
+446
 </td>
 <td style="text-align:right;">
-4259.34
+2138.69
 </td>
 <td style="text-align:right;">
-0
+208.54
 </td>
 </tr>
 </tbody>
 </table>
 <pre class="r"><code># Part B table
-make_table_kable(person_df, &quot;event_B&quot;)</code></pre>
+make_table_kable(person_df_B, &quot;event_B&quot;)</code></pre>
 <table class="table table-striped table-hover" style="width: auto !important; ">
 <caption>
 Incident Hypertension - event_B
@@ -1382,16 +1376,16 @@ Incidence per 1000 PYs
 <strong>Total</strong>
 </td>
 <td style="text-align:right;">
-2608
+2112
 </td>
 <td style="text-align:right;">
-309
+890
 </td>
 <td style="text-align:right;">
-12293.37
+8571.87
 </td>
 <td style="text-align:right;">
-25.14
+103.83
 </td>
 </tr>
 <tr>
@@ -1412,16 +1406,16 @@ Incidence per 1000 PYs
 Male
 </td>
 <td style="text-align:right;">
-1352
+1089
 </td>
 <td style="text-align:right;">
-162
+463
 </td>
 <td style="text-align:right;">
-6430.33
+4441.36
 </td>
 <td style="text-align:right;">
-25.19
+104.25
 </td>
 </tr>
 <tr>
@@ -1429,16 +1423,16 @@ Male
 Female
 </td>
 <td style="text-align:right;">
-1256
+1023
 </td>
 <td style="text-align:right;">
-147
+427
 </td>
 <td style="text-align:right;">
-5863.03
+4130.51
 </td>
 <td style="text-align:right;">
-25.07
+103.38
 </td>
 </tr>
 <tr>
@@ -1459,16 +1453,16 @@ Female
 18-29 years
 </td>
 <td style="text-align:right;">
-129
+107
 </td>
 <td style="text-align:right;">
-16
+39
 </td>
 <td style="text-align:right;">
-634.82
+463.11
 </td>
 <td style="text-align:right;">
-25.2
+84.21
 </td>
 </tr>
 <tr>
@@ -1476,16 +1470,16 @@ Female
 30-39 years
 </td>
 <td style="text-align:right;">
-316
+249
 </td>
 <td style="text-align:right;">
-33
+110
 </td>
 <td style="text-align:right;">
-1491.22
+1028.14
 </td>
 <td style="text-align:right;">
-22.13
+106.99
 </td>
 </tr>
 <tr>
@@ -1493,16 +1487,16 @@ Female
 40-49 years
 </td>
 <td style="text-align:right;">
-554
+441
 </td>
 <td style="text-align:right;">
-65
+188
 </td>
 <td style="text-align:right;">
-2592.26
+1750.66
 </td>
 <td style="text-align:right;">
-25.07
+107.39
 </td>
 </tr>
 <tr>
@@ -1510,16 +1504,16 @@ Female
 50-59 years
 </td>
 <td style="text-align:right;">
-715
+582
 </td>
 <td style="text-align:right;">
-89
+248
 </td>
 <td style="text-align:right;">
-3315.73
+2361.44
 </td>
 <td style="text-align:right;">
-26.84
+105.02
 </td>
 </tr>
 <tr>
@@ -1527,20 +1521,498 @@ Female
 60+ years
 </td>
 <td style="text-align:right;">
-894
+733
 </td>
 <td style="text-align:right;">
-106
+305
 </td>
 <td style="text-align:right;">
-4259.34
+2968.51
 </td>
 <td style="text-align:right;">
-24.89
+102.75
 </td>
 </tr>
 </tbody>
 </table>
+<p>Incidence rates of hypertension were estimated using person-years of
+follow-up. Hypertension was defined as SBP ≥130 mmHg, DBP ≥80 mmHg, or
+antihypertensive medication use.</p>
+<p>Part A defined incident hypertension as the first occurrence of
+elevated blood pressure or antihypertensive medication use, while Part B
+required a second occurrence of these indicators to define a more
+persistent event. Part A excluded home visits, whereas Part B included
+all visit types.</p>
+<p>Only participants free of hypertension at baseline were included.
+Rates were stratified by sex and age.</p>
+<p>Results: Incidence was higher in Part A (208.5 per 1000 PY) compared
+to Part B (103.8 per 1000 PY), reflecting the stricter outcome
+definition in Part B and differences in observed follow-up time due to
+inclusion of additional visit types. Age 18-29 had slightly smaller
+incidence rates compared to other age groups. The other groups were
+pretty similar in incidence rates. There was just a difference of
+approximately 1 incidence per 1000 PYs amongst males and females.</p>
+</div>
+<div id="part-3-regression" class="section level2">
+<h2>Part 3: Regression</h2>
+<pre class="r"><code># Baseline weight
+weight_df = vis_clean |&gt;
+  filter(visit_type == &quot;entry&quot;) |&gt;
+  dplyr::select(id, weight)
+# Create BMI
+bmi_data = base_clean |&gt;
+  left_join(weight_df, by = &quot;id&quot;) |&gt;
+  mutate(height = height / 100) |&gt; # Height to meters
+  mutate(bmi = weight / (height^2)) |&gt;
+  dplyr::select(id, bmi)</code></pre>
+<pre class="r"><code>person_df_A = person_df_A |&gt;
+  left_join(bmi_data, by = &#39;id&#39;) |&gt;
+  mutate(age10 = age/10)</code></pre>
+<pre class="r"><code>person_df_A = person_df_A |&gt;
+  mutate(
+    event_A = as.integer(event_A),
+    py_A = as.numeric(py_A), 
+    bmi_cat = case_when(
+      bmi &lt; 18.5 ~ &quot;Underweight&quot;,
+      bmi &lt; 25 ~ &quot;Normal&quot;,
+      bmi &lt; 30 ~ &quot;Overweight&quot;,
+      TRUE ~ &quot;Obese&quot;
+    ),
+    bmi_cat = factor(bmi_cat, levels = c(&quot;Normal&quot;, &quot;Overweight&quot;, &quot;Obese&quot;, &quot;Underweight&quot;))
+  ) |&gt;
+  filter(
+    !is.na(event_A),
+    !is.na(py_A),
+    py_A &gt; 0
+  )
+
+# Univariable models
+model_age = glm(event_A ~ age10,
+                offset = log(py_A),
+                family = poisson(),
+                data = person_df_A)
+
+model_sex = glm(event_A ~ male,
+                offset = log(py_A),
+                family = poisson(),
+                data = person_df_A)
+
+model_bmi = glm(event_A ~ bmi_cat,
+                offset = log(py_A),
+                family = poisson(),
+                data = person_df_A)
+
+# Multivariable model
+model_multi = glm(event_A ~ age10 + male + bmi_cat,
+                  offset = log(py_A),
+                  family = poisson(),
+                  data = person_df_A)
+
+# IRRs + CI function
+get_results = function(model) {
+  irr = exp(coef(model))
+  ci = exp(confint(model))
+  
+  out = data.frame(
+    Variable = names(irr),
+    IRR = irr,
+    CI_low = ci[,1],
+    CI_high = ci[,2]
+  )
+  
+  return(out)
+}
+
+# Build tables
+tab_age = get_results(model_age)
+tab_sex = get_results(model_sex)
+tab_bmi = get_results(model_bmi)
+tab_multi = get_results(model_multi)
+
+tab_age |&gt;
+  kable(digits = 3, caption = &quot;Univariable Model: Age&quot;) |&gt;
+  kable_styling(full_width = FALSE)</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+Univariable Model: Age
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Variable
+</th>
+<th style="text-align:right;">
+IRR
+</th>
+<th style="text-align:right;">
+CI_low
+</th>
+<th style="text-align:right;">
+CI_high
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:right;">
+0.209
+</td>
+<td style="text-align:right;">
+0.169
+</td>
+<td style="text-align:right;">
+0.259
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+age10
+</td>
+<td style="text-align:left;">
+age10
+</td>
+<td style="text-align:right;">
+0.999
+</td>
+<td style="text-align:right;">
+0.961
+</td>
+<td style="text-align:right;">
+1.039
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>tab_sex |&gt;
+  kable(digits = 3, caption = &quot;Univariable Model: Sex&quot;) |&gt;
+  kable_styling(full_width = FALSE)</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+Univariable Model: Sex
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Variable
+</th>
+<th style="text-align:right;">
+IRR
+</th>
+<th style="text-align:right;">
+CI_low
+</th>
+<th style="text-align:right;">
+CI_high
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:right;">
+0.210
+</td>
+<td style="text-align:right;">
+0.194
+</td>
+<td style="text-align:right;">
+0.227
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+male1
+</td>
+<td style="text-align:left;">
+male1
+</td>
+<td style="text-align:right;">
+0.987
+</td>
+<td style="text-align:right;">
+0.885
+</td>
+<td style="text-align:right;">
+1.101
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>tab_bmi |&gt;
+  kable(digits = 3, caption = &quot;Univariable Model: BMI Categories&quot;) |&gt;
+  kable_styling(full_width = FALSE)</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+Univariable Model: BMI Categories
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Variable
+</th>
+<th style="text-align:right;">
+IRR
+</th>
+<th style="text-align:right;">
+CI_low
+</th>
+<th style="text-align:right;">
+CI_high
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:right;">
+0.209
+</td>
+<td style="text-align:right;">
+0.188
+</td>
+<td style="text-align:right;">
+0.233
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+bmi_catOverweight
+</td>
+<td style="text-align:left;">
+bmi_catOverweight
+</td>
+<td style="text-align:right;">
+0.973
+</td>
+<td style="text-align:right;">
+0.842
+</td>
+<td style="text-align:right;">
+1.126
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+bmi_catObese
+</td>
+<td style="text-align:left;">
+bmi_catObese
+</td>
+<td style="text-align:right;">
+1.020
+</td>
+<td style="text-align:right;">
+0.887
+</td>
+<td style="text-align:right;">
+1.173
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+bmi_catUnderweight
+</td>
+<td style="text-align:left;">
+bmi_catUnderweight
+</td>
+<td style="text-align:right;">
+0.952
+</td>
+<td style="text-align:right;">
+0.730
+</td>
+<td style="text-align:right;">
+1.224
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>tab_multi |&gt;
+  kable(digits = 3, caption = &quot;Multivariable Model&quot;) |&gt;
+  kable_styling(full_width = FALSE)</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+Multivariable Model
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Variable
+</th>
+<th style="text-align:right;">
+IRR
+</th>
+<th style="text-align:right;">
+CI_low
+</th>
+<th style="text-align:right;">
+CI_high
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:right;">
+0.211
+</td>
+<td style="text-align:right;">
+0.166
+</td>
+<td style="text-align:right;">
+0.267
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+age10
+</td>
+<td style="text-align:left;">
+age10
+</td>
+<td style="text-align:right;">
+1.000
+</td>
+<td style="text-align:right;">
+0.962
+</td>
+<td style="text-align:right;">
+1.040
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+male1
+</td>
+<td style="text-align:left;">
+male1
+</td>
+<td style="text-align:right;">
+0.989
+</td>
+<td style="text-align:right;">
+0.886
+</td>
+<td style="text-align:right;">
+1.103
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+bmi_catOverweight
+</td>
+<td style="text-align:left;">
+bmi_catOverweight
+</td>
+<td style="text-align:right;">
+0.973
+</td>
+<td style="text-align:right;">
+0.842
+</td>
+<td style="text-align:right;">
+1.126
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+bmi_catObese
+</td>
+<td style="text-align:left;">
+bmi_catObese
+</td>
+<td style="text-align:right;">
+1.019
+</td>
+<td style="text-align:right;">
+0.887
+</td>
+<td style="text-align:right;">
+1.173
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+bmi_catUnderweight
+</td>
+<td style="text-align:left;">
+bmi_catUnderweight
+</td>
+<td style="text-align:right;">
+0.953
+</td>
+<td style="text-align:right;">
+0.730
+</td>
+<td style="text-align:right;">
+1.224
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>overdispersion_check = function(model) {
+  ratio = sum(residuals(model, type = &quot;pearson&quot;)^2) / df.residual(model)
+  return(ratio)
+}
+overdispersion_check(model_age)</code></pre>
+<pre><code>## [1] 1.313523</code></pre>
+<pre class="r"><code>overdispersion_check(model_sex)</code></pre>
+<pre><code>## [1] 1.313268</code></pre>
+<pre class="r"><code>overdispersion_check(model_bmi)</code></pre>
+<pre><code>## [1] 1.315923</code></pre>
+<pre class="r"><code>overdispersion_check(model_multi)</code></pre>
+<pre><code>## [1] 1.317047</code></pre>
+<p>Used: Poisson regression models with a log person-time offset to
+estimate incident rate ratios for incident hypertension. Univariable
+model results:</p>
+<ol style="list-style-type: decimal">
+<li><p>Age (per 10-year increase) was not significantly associated with
+incident hypertension (IRR ≈ 1.00). (Plus, the confidence interval
+contains the null value of 1.)</p></li>
+<li><p>There was no evidence of a difference in incidence between males
+and females (IRR ≈ 0.99). (Plus, the confidence interval contains the
+null value of 1. Note: male = 0 i.e. being female is the reference group
+here.)</p></li>
+<li><p>Compared to normal BMI, overweight, obesity, and underweight
+categories were not significantly associated with hypertension
+incidence. (Plus, the confidence interval contains the null value of
+1.)</p></li>
+</ol>
+<p>Multivariable model results: Adjustment for age, sex, and BMI did not
+materially change estimates, and no covariates showed statistically
+significant associations.</p>
+<p>Mild overdispersion was observed (~1.3), but was not considered
+substantial in all models. Considered not substantial. Kept poisson
+based models as they are simpler and more interpretive.</p>
 </div>
 
 
