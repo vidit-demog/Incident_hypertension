@@ -192,6 +192,10 @@ summary(as.factor(full_data$free_text_med))
 head(full_data, 20)
 ```
 
+Extremely high SBP/DBP values were retained as recorded, given no predefined clinical exclusion criteria were specified. Perhaps they are rare cases. But the almost impossible small values were filtered out.
+
+Comments in the above chunk(s) specify how medicines were handled as it pertains to antihypertensive medication use.
+
 ## Part 2: Incident Hypertension
 
 ```{R, warning = FALSE}
