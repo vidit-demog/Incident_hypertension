@@ -6,7 +6,7 @@ date: "2026-04-06"
 
 ## Data Cleaning
 
-```{R}
+```{R setup, message=FALSE, warning=FALSE}
 # Libraries
 library(here)
 library(tidyverse)
