@@ -14,7 +14,7 @@ library(janitor)
 library(kableExtra)
 ```
 
-```{R}
+```{R, echo = FALSE, warning = FALSE}
 # Reading the datasets
 # Baseline Data
 base = read_csv(here("files", "baseline_df.csv"))
@@ -42,7 +42,7 @@ check_exit = outcome |>
   count(n_exit)
 ```
 
-```{R}
+```{R, warning = FALSE}
 # Data Cleaning, Manipulation and Merging
 # Ignoring NAs or missingnes for now
 # First cleaning base
@@ -157,13 +157,13 @@ summary(as.factor(full_data$free_text_med))
 # Note: I read warfarin is a blood thinner so not counting it
 ```
 
-```{R}
+```{R, warning = FALSE}
 head(full_data, 20)
 ```
 
 ## Incident Hypertension
 
-```{R}
+```{R, warning = FALSE}
 # Helper function
 safe_min <- function(x) {
   if (length(x) == 0 || all(is.na(x))) return(as.Date(NA))
@@ -288,7 +288,7 @@ person_df_B = table_data_B |>
 ```
 
 
-```{R}
+```{R, warning = FALSE}
 make_table_kable = function(df, event_var) {
   
   # Which PY column to use?
@@ -395,7 +395,7 @@ Results: Incidence was higher in Part A (208.5 per 1000 PY) compared to Part B (
 
 ## Regression
 
-```{R}
+```{R, warning = FALSE}
 # Baseline weight
 weight_df = vis_clean |>
   filter(visit_type == "entry") |>
@@ -408,13 +408,13 @@ bmi_data = base_clean |>
   dplyr::select(id, bmi)
 ```
 
-```{R}
+```{R, warning = FALSE}
 person_df_A = person_df_A |>
   left_join(bmi_data, by = 'id') |>
   mutate(age10 = age/10)
 ```
 
-```{R, message= FALSE}
+```{R, message= FALSE, warning = FALSE}
 person_df_A = person_df_A |>
   mutate(
     event_A = as.integer(event_A),
