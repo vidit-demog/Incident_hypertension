@@ -579,9 +579,9 @@ display: none;
 </div>
 
 
-<p>The HTML report includes both code and outputs for transparency (with
-some intermediate checks omitted from display), while the full
-reproducible workflow is available in the accompanying R Markdown
+<p>The HTML report includes both code and outputs for transparency, with
+minor intermediate checks omitted where appropriate. The full
+reproducible workflow is provided in the accompanying R Markdown
 file.</p>
 <pre class="r"><code># Libraries
 library(here)
@@ -946,6 +946,11 @@ summary(as.factor(full_data$free_text_med))</code></pre>
 ## #   aspirin &lt;dbl&gt;, atorvastatin &lt;dbl&gt;, simvastatin &lt;dbl&gt;, metformin &lt;dbl&gt;,
 ## #   glyburide &lt;dbl&gt;, free_text_med &lt;chr&gt;, a_med &lt;int&gt;, exit_date &lt;date&gt;,
 ## #   exit_type &lt;fct&gt;</code></pre>
+<p>Extremely high SBP/DBP values were retained as recorded, as no
+upper-bound exclusion criteria were specified. Very low values (≤40 for
+SBP and ≤30 for DBP) were treated as implausible and set to NA.</p>
+<p>Comments in the above chunk(s) specify how medicines were handled as
+it pertains to antihypertensive medication use.</p>
 </div>
 <div id="part-2-incident-hypertension" class="section level2">
 <h2>Part 2: Incident Hypertension</h2>
@@ -1543,22 +1548,21 @@ Female
 follow-up. Hypertension was defined as SBP ≥130 mmHg, DBP ≥80 mmHg, or
 antihypertensive medication use.</p>
 <p>Part A defined incident hypertension as the first occurrence of
-elevated blood pressure or antihypertensive medication use, while Part B
-required a second occurrence of these indicators to define a more
-persistent event. Part A excluded home visits, whereas Part B included
-all visit types.</p>
+elevated blood pressure or antihypertensive medication use. Part B
+defined incident hypertension as requiring two separate occurrences of
+elevated blood pressure or antihypertensive medication use, representing
+a stricter definition of sustained hypertension. Part A excluded home
+visits, whereas Part B included all visit types.</p>
 <p>Only participants free of hypertension at baseline were included.
 Rates were stratified by sex and age.</p>
 <p>Results: Incidence was higher in Part A (208.5 per 1000 PY) compared
-to Part B (103.8 per 1000 PY), reflecting the stricter outcome
-definition in Part B and differences in observed follow-up time due to
-inclusion of additional visit types. Age 18-29 had slightly smaller
-incidence rates compared to other age groups. The other groups were
-pretty similar in incidence rates. There was just a difference of
-approximately 1 incidence per 1000 PYs amongst males and females.</p>
-</div>
-<div id="part-3-regression" class="section level2">
-<h2>Part 3: Regression</h2>
+to Part B (103.8 per 1000 PY). Incidence was lower in Part B compared to
+Part A, reflecting both the stricter outcome definition and differences
+in follow-up time due to inclusion of additional visit types. Age 18-29
+had slightly smaller incidence rates compared to other age groups. The
+other groups were pretty similar in incidence rates. There was just a
+difference of approximately 1 incidence per 1000 PYs amongst males and
+females. ## Part 3: Regression</p>
 <pre class="r"><code># Baseline weight
 weight_df = vis_clean |&gt;
   filter(visit_type == &quot;entry&quot;) |&gt;
@@ -2000,20 +2004,20 @@ estimate incident rate ratios for incident hypertension. Univariable
 model results:</p>
 <ol style="list-style-type: decimal">
 <li><p>Age (per 10-year increase) was not significantly associated with
-incident hypertension (IRR ≈ 1.00). (Plus, the confidence interval
-contains the null value of 1.)</p></li>
+incident hypertension (IRR ≈ 1.00). (The confidence interval contains
+the null value of 1.)</p></li>
 <li><p>There was no evidence of a difference in incidence between males
-and females (IRR ≈ 0.99). (Plus, the confidence interval contains the
-null value of 1. Note: male = 0 i.e. being female is the reference group
+and females (IRR ≈ 0.99). (The confidence interval contains the null
+value of 1. Note: male = 0 i.e. being female is the reference group
 here.)</p></li>
-<li><p>Compared to normal BMI, overweight, obesity, and underweight
-categories were not significantly associated with hypertension
-incidence. (Plus, the confidence interval contains the null value of
-1.)</p></li>
+<li><p>Compared to normal BMI (the reference category), there was no
+evidence of a difference in hypertension incidence for overweight,
+obesity, or underweight categories (All confidence intervals included
+1).</p></li>
 </ol>
-<p>Multivariable model results: Adjustment for age, sex, and BMI did not
-materially change estimates, and no covariates showed statistically
-significant associations.</p>
+<p>Multivariable model results: None of the covariates showed
+statistically significant associations with incident hypertension in the
+multivariable model. (All confidence intervals included 1).</p>
 <p>Mild overdispersion was observed (dispersion parameter ≈ 1.3) across
 models. Given that overdispersion was limited, Poisson regression was
 retained for interpretability, noting that standard errors may be
