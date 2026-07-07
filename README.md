@@ -39,7 +39,7 @@ Mild overdispersion (~1.3) showed up in all four Poisson models but wasn't corre
 A couple of things I noticed but didn't fully resolve. Worth calling out rather than glossing over:
 
 - **Outlier handling only goes one direction, and that's deliberate.** Very low readings (SBP ≤40, DBP ≤30) are set to missing, since a living person can't sustain a reading that low, so it's a safe exclusion. Extremely high readings (into the 200s-300s+ mmHg) are kept as recorded. Unlike the low end, these can't be ruled out the same way: severe hypertensive crises in that range are clinically documented, so a high reading could be real or could be a data/measurement error, and there's no way to tell which just from the number. Still a real limitation either way. A sensitivity analysis excluding or capping these values would be a reasonable next step.
-- **Some visit records are duplicated:** same participant and visit date, slightly different values, and they aren't deduplicated before analysis. Worth reconciling or dropping as a robustness check.
+- **A few records share the same participant, visit label, and exact date, but have conflicting values** (different BP readings, different medications flagged). This could be genuine duplicate entries, or it could be two real encounters that happened to land on the same day, and there's no way to tell which from the data alone. They aren't deduplicated before analysis. Worth reconciling or dropping as a robustness check either way.
 
 In a live project, both of these are exactly the kind of thing I'd raise with whoever manages or generated the data before making a unilateral call on how to handle them, rather than resolve them alone and hope I guessed right.
 
