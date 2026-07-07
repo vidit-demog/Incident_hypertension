@@ -1,5 +1,5 @@
 ---
-title: "Vidit_LDA_Exercise_WashU"
+title: "Vidit_LDA_Exercise"
 output: html_document
 date: "2026-04-06"
 ---
@@ -187,13 +187,14 @@ write_csv(full_data, "files/full_data.csv")
 summary(as.factor(full_data$free_text_med))
 # Apart from warfarin rest are drugs blood pressure drugs
 # Note: I read warfarin is a blood thinner so not counting it
+# There could be typo in source data in med names but I used the one here
 ```
 
 ```{R, warning = FALSE}
 head(full_data, 20)
 ```
 
-Extremely high SBP/DBP values were retained as recorded, as no upper-bound exclusion criteria were specified. Very low values (≤40 for SBP and ≤30 for DBP) were treated as implausible and set to NA.
+Very low values (≤40 mmHg for SBP and ≤30 mmHg for DBP) were treated as implausible and set to NA: a living person can't sustain a reading that low, so this is a safe exclusion. Extremely high values (into the 200s–300s+ mmHg) were retained as recorded. Unlike the low end, these can't be ruled out the same way: severe hypertensive crises in that range are clinically documented, so a high reading could be real or could be a measurement/data error, and there's no way to tell which from the number alone. No upper-bound exclusion was applied for this reason, but it remains a limitation: a sensitivity analysis excluding or capping these values would be a reasonable next step to check whether they're influencing the incidence estimates.
 
 Comments in the above chunk(s) specify how medicines were handled as it pertains to antihypertensive medication use.
 
@@ -427,7 +428,8 @@ Part A defined incident hypertension as the first occurrence of elevated blood p
 
 Only participants free of hypertension at baseline were included. Rates were stratified by sex and age.
 
-Results: Incidence was higher in Part A (208.5 per 1000 PY) compared to Part B (103.8 per 1000 PY). Incidence was lower in Part B compared to Part A, reflecting both the stricter outcome definition and differences in follow-up time due to inclusion of additional visit types. Age 18-29 had slightly smaller incidence rates compared to other age groups. The other groups were pretty similar in incidence rates. There was just a difference of approximately 1 incidence per 1000 PYs amongst males and females. 
+Results: Incidence was higher in Part A (208.5 per 1000 PY) than in Part B (103.8 per 1000 PY), reflecting the stricter outcome definition and the extra follow-up time from including all visit types in Part B. Age groups were fairly similar within each definition, but the youngest group (18-29) didn't behave consistently across the two: it had the highest incidence in Part A and the lowest in Part B. Sex differences were small in both parts: about 2.6 per 1000 PYs higher in females in Part A, and under 1 per 1000 PYs higher in males in Part B.
+
 ## Part 3: Regression
 
 ```{R, warning = FALSE}
