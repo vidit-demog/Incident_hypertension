@@ -30,12 +30,18 @@ This project estimates the incidence of hypertension in a longitudinally followe
 | Person-time calculation | Time from entry to first/second qualifying event, or censoring at last visit/exit |
 | Modeling | Poisson regression with log(person-years) offset; incidence rate ratios with 95% CIs |
 
+## Modeling notes
+
+Mild overdispersion (~1.3) showed up in all four Poisson models but wasn't corrected for, and that was a deliberate stopping point, not an oversight. Quasi-Poisson only rescales the standard errors (by roughly √1.3, about 1.14x), it doesn't change the point estimates, so it can only widen the confidence intervals around the same estimates, never narrow them. Since every interval already crossed the null under the tighter, more liberal Poisson standard errors, correcting for the overdispersion could only make the null findings more robust, not less. So refitting with quasi-Poisson wasn't necessary to know the conclusion would hold, and I stopped there rather than doing it just to have done it.
+
 ## Data quality notes
 
 A couple of things I noticed but didn't fully resolve. Worth calling out rather than glossing over:
 
 - **Outlier handling only goes one direction, and that's deliberate.** Very low readings (SBP ≤40, DBP ≤30) are set to missing, since a living person can't sustain a reading that low, so it's a safe exclusion. Extremely high readings (into the 200s-300s+ mmHg) are kept as recorded. Unlike the low end, these can't be ruled out the same way: severe hypertensive crises in that range are clinically documented, so a high reading could be real or could be a data/measurement error, and there's no way to tell which just from the number. Still a real limitation either way. A sensitivity analysis excluding or capping these values would be a reasonable next step.
 - **Some visit records are duplicated:** same participant and visit date, slightly different values, and they aren't deduplicated before analysis. Worth reconciling or dropping as a robustness check.
+
+In a live project, both of these are exactly the kind of thing I'd raise with whoever manages or generated the data before making a unilateral call on how to handle them, rather than resolve them alone and hope I guessed right.
 
 ## Repository structure
 
