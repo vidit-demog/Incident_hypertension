@@ -56,4 +56,4 @@ R, tidyverse, janitor, kableExtra, R Markdown.
 
 ## Reproducing this analysis
 
-Open `Incident_hypertension.Rproj` in RStudio and knit `Vidit_WashU_StatDataAnalyst_LDA_Ex.Rmd`. All file paths are relative (via the `here` package), so it runs without modification once cloned.ion.Rproj in RStudio and knit Vidit_WashU_StatDataAnalyst_LDA_Ex.Rmd. All file paths are relative (via the here package), so it runs without modification once cloned.
+Open `Incident_hypertension.Rproj` in RStudio and knit `Vidit_WashU_StatDataAnalyst_LDA_Ex.Rmd`. All file paths are relative (via the `here` package), so it runs without modification once cloned.ion.Rproj in RStudio and knit Vidit_WashU_StatDataAnalyst_LDA_Ex.Rmd. 
